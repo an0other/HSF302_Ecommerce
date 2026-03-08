@@ -17,7 +17,7 @@ public class ProductImages {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String imageUrl;
 
     @Column(nullable = false)

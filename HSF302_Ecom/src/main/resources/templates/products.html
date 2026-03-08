@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${currentCategory != null} ? ${currentCategory.name} + ' — Voltex' : 'All Products — Voltex'">Products — Voltex</title>
+    <link rel="stylesheet" th:href="@{/css/indexstyle.css}" />
+    <link rel="stylesheet" th:href="@{/css/products.css}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ================================================================
+     NAVBAR
+================================================================ -->
+<header class="navbar" id="navbar">
+    <div class="nav-top-row">
+        <div class="nav-inner">
+
+            <a href="/" class="nav-logo">
+                <span class="logo-volt">VOLT</span><span class="logo-ex">EX</span>
+            </a>
+
+            <form class="nav-search" id="navSearch" th:action="@{/products}" method="get">
+                <input type="hidden" name="categoryId" id="searchHiddenCat" th:value="${categoryId}" />
+                <div class="search-cat-select" id="searchCatSelect">
+                    <button class="search-cat-btn" id="searchCatBtn" type="button">
+                            <span id="searchCatLabel"
+                                  th:text="${currentCategory != null} ? ${currentCategory.name} : 'All'">All</span>
+                        <svg class="search-cat-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <ul class="search-cat-dropdown" id="searchCatDropdown">
+                        <li class="search-cat-option"
+                            th:classappend="${categoryId == null} ? ' search-cat-option--active'"
+                            data-value="" data-label="All">All Categories</li>
+                        <li th:each="cat : ${categories}"
+                            class="search-cat-option"
+                            th:classappend="${categoryId != null and categoryId == cat.id} ? ' search-cat-option--active'"
+                            th:data-value="${cat.id}"
+                            th:data-label="${cat.name}"
+                            th:text="${cat.name}"></li>
+                    </ul>
+                </div>
+                <div class="search-sep"></div>
+                <input type="text" name="keyword" class="search-input"
+                       placeholder="Search products, brands…"
+                       th:value="${keyword}" autocomplete="off" />
+                <button class="search-btn" type="submit" aria-label="Search">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="nav-actions">
+                <a href="/login"    class="nav-action-link">Sign In</a>
+                <span class="nav-action-sep">|</span>
+                <a href="/register" class="nav-action-link">Register</a>
+                <a href="/cart" class="nav-cart-btn" aria-label="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                    <span class="nav-cart-count">0</span>
+                </a>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Category nav strip — active category underlined -->
+    <nav class="nav-cat-strip">
+        <div class="nav-cat-inner">
+            <a href="/products"
+               th:classappend="${categoryId == null} ? ' nav-cat-link--active'"
+               class="nav-cat-link nav-cat-link--all">All</a>
+            <a th:each="cat : ${categories}"
+               th:href="@{/products(categoryId=${cat.id})}"
+               th:text="${cat.name}"
+               th:classappend="${categoryId != null and categoryId == cat.id} ? ' nav-cat-link--active'"
+               class="nav-cat-link">
+            </a>
+        </div>
+    </nav>
+
+    <!-- Mobile drawer -->
+    <div class="mobile-nav" id="mobileNav">
+        <a href="/products" class="mobile-nav-link">All Products</a>
+        <a th:each="cat : ${categories}"
+           th:href="@{/products(categoryId=${cat.id})}"
+           th:text="${cat.name}"
+           class="mobile-nav-link"></a>
+        <div class="mobile-nav-divider"></div>
+        <a href="/login"    class="mobile-nav-link">Sign In</a>
+        <a href="/register" class="mobile-nav-link">Register</a>
+        <a href="/cart"     class="mobile-nav-link">Cart (0)</a>
+    </div>
+</header>
+
+<!-- ================================================================
+     MAIN
+================================================================ -->
+<main class="products-main">
+    <div class="products-container">
+
+        <!-- ============================================================
+             SIDEBAR — filter panel
+        ============================================================ -->
+        <aside class="products-sidebar">
+
+            <!-- Active filters chips -->
+            <div class="sidebar-active"
+                 th:if="${currentCategory != null or brandId != null or (keyword != null and !keyword.isBlank())}">
+                <div class="sidebar-active-header">
+                    <span class="sidebar-heading">Active Filters</span>
+                    <a href="/products" class="sidebar-clear-all">Clear all</a>
+                </div>
+                <div class="sidebar-active-tags">
+                        <span class="sidebar-tag" th:if="${currentCategory != null}">
+                            <span th:text="${currentCategory.name}">Cat</span>
+                            <a th:href="@{/products(keyword=${keyword})}"
+                               class="sidebar-tag-remove" aria-label="Remove">&#x2715;</a>
+                        </span>
+                    <span class="sidebar-tag" th:if="${brandId != null}">
+                            Brand filter
+                            <a th:href="@{/products(categoryId=${categoryId}, keyword=${keyword})}"
+                               class="sidebar-tag-remove" aria-label="Remove">&#x2715;</a>
+                        </span>
+                    <span class="sidebar-tag" th:if="${keyword != null and !keyword.isBlank()}">
+                            &#x201C;<span th:text="${keyword}">kw</span>&#x201D;
+                            <a th:href="@{/products(categoryId=${categoryId}, brandId=${brandId})}"
+                               class="sidebar-tag-remove" aria-label="Remove">&#x2715;</a>
+                        </span>
+                </div>
+            </div>
+
+            <!-- Brand filter — only when a category is selected -->
+            <div class="sidebar-section"
+                 th:if="${categoryId != null and not #lists.isEmpty(brands)}">
+                <h3 class="sidebar-heading">Brand</h3>
+                <ul class="sidebar-filter-list">
+                    <li>
+                        <a th:href="@{/products(categoryId=${categoryId}, keyword=${keyword}, sort=${sort})}"
+                           th:classappend="${brandId == null} ? ' sidebar-filter-opt--active'"
+                           class="sidebar-filter-opt">
+                            <span class="sfo-radio"></span> All Brands
+                        </a>
+                    </li>
+                    <li th:each="b : ${brands}">
+                        <a th:href="@{/products(categoryId=${categoryId}, brandId=${b.id}, keyword=${keyword}, sort=${sort})}"
+                           th:classappend="${brandId != null and brandId == b.id} ? ' sidebar-filter-opt--active'"
+                           class="sidebar-filter-opt">
+                            <span class="sfo-radio"></span>
+                            <span th:text="${b.name}">Brand</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Sort -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-heading">Sort by</h3>
+                <ul class="sidebar-filter-list">
+                    <li>
+                        <a th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword})}"
+                           th:classappend="${sort == null} ? ' sidebar-filter-opt--active'"
+                           class="sidebar-filter-opt">
+                            <span class="sfo-radio"></span> Newest first
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort='price_asc')}"
+                           th:classappend="${sort == 'price_asc'} ? ' sidebar-filter-opt--active'"
+                           class="sidebar-filter-opt">
+                            <span class="sfo-radio"></span> Price: Low to High
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort='price_desc')}"
+                           th:classappend="${sort == 'price_desc'} ? ' sidebar-filter-opt--active'"
+                           class="sidebar-filter-opt">
+                            <span class="sfo-radio"></span> Price: High to Low
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort='rating')}"
+                           th:classappend="${sort == 'rating'} ? ' sidebar-filter-opt--active'"
+                           class="sidebar-filter-opt">
+                            <span class="sfo-radio"></span> Top Rated
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Min. Rating -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-heading">Min. Rating</h3>
+                <ul class="sidebar-filter-list">
+                    <li th:each="r : ${#numbers.sequence(5, 1, -1)}">
+                        <a class="sidebar-filter-opt sidebar-rating-opt"
+                           th:classappend="${minRating != null and minRating == r} ? ' sidebar-filter-opt--active'"
+                           th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, minRating=${r})}">
+                            <span class="sfo-radio"></span>
+                            <span class="sfo-stars">
+                                    <th:block th:each="star : ${#numbers.sequence(1, 5)}">
+                                        <svg th:classappend="${star <= r} ? ' star-on' : ' star-off'"
+                                             width="13" height="13" viewBox="0 0 24 24"
+                                             fill="currentColor" stroke="none">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                        </svg>
+                                    </th:block>
+                                </span>
+                            <span class="sfo-label" th:text="${r} + ' &amp; up'">5 &amp; up</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </aside>
+
+        <!-- ============================================================
+             MAIN CONTENT
+        ============================================================ -->
+        <div class="products-content">
+
+            <!-- Breadcrumb -->
+            <div class="products-breadcrumb">
+                <a href="/" class="breadcrumb-link">Home</a>
+                <span class="breadcrumb-sep">/</span>
+                <a href="/products" class="breadcrumb-link">Products</a>
+                <th:block th:if="${currentCategory != null}">
+                    <span class="breadcrumb-sep">/</span>
+                    <span class="breadcrumb-current" th:text="${currentCategory.name}">Category</span>
+                </th:block>
+            </div>
+
+            <!-- Title + result count -->
+            <div class="products-title-row">
+                <div>
+                    <h1 class="products-title"
+                        th:text="${currentCategory != null} ? ${currentCategory.name} : 'All Products'">
+                        All Products
+                    </h1>
+                    <p class="products-count"
+                       th:text="${totalElements} + ' products found'">0 products found</p>
+                </div>
+                <!-- Keyword badge -->
+                <div class="products-active-filters"
+                     th:if="${keyword != null and !keyword.isBlank()}">
+                        <span class="filter-badge">
+                            &#x201C;<span th:text="${keyword}">kw</span>&#x201D;
+                            <a th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, sort=${sort})}"
+                               class="filter-badge-remove" aria-label="Clear search">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </a>
+                        </span>
+                </div>
+            </div>
+
+            <!-- Brand pill tabs — only when a category is selected -->
+            <div class="products-brand-tabs"
+                 th:if="${categoryId != null and not #lists.isEmpty(brands)}">
+                <a th:href="@{/products(categoryId=${categoryId}, keyword=${keyword}, sort=${sort})}"
+                   th:classappend="${brandId == null} ? ' brand-tab--active'"
+                   class="brand-tab">All Brands</a>
+                <a th:each="b : ${brands}"
+                   th:href="@{/products(categoryId=${categoryId}, brandId=${b.id}, keyword=${keyword}, sort=${sort})}"
+                   th:classappend="${brandId != null and brandId == b.id} ? ' brand-tab--active'"
+                   th:text="${b.name}"
+                   class="brand-tab">
+                </a>
+            </div>
+
+            <!-- Product grid -->
+            <div class="products-grid"
+                 th:if="${not #lists.isEmpty(productPage.content)}">
+                <div class="product-card" th:each="p : ${productPage.content}">
+                    <div class="product-img-wrap">
+                        <img th:src="${p.imageUrl != null ? p.imageUrl : '/img/image1.webp'}"
+                             th:alt="${p.productName}"
+                             class="product-img" />
+                        <span th:if="${p.soldCount >= 50}"
+                              class="product-badge product-badge--hot">Hot</span>
+                        <span th:if="${p.soldCount < 10}"
+                              class="product-badge product-badge--new">New</span>
+                    </div>
+                    <div class="product-body">
+                        <span class="product-brand" th:text="${p.brandName}">Brand</span>
+                        <h3 class="product-name"  th:text="${p.productName}">Name</h3>
+                        <div class="product-rating">
+                            <div class="stars" th:attr="aria-label=${p.avgRatingFormatted}">
+                                <div class="stars-fill" th:style="'width:' + ${p.starFillPct} + '%'"></div>
+                            </div>
+                            <span class="rating-val"  th:text="${p.avgRatingFormatted}">0.0</span>
+                            <span class="rating-sold" th:text="'· ' + ${p.soldCount} + ' sold'"></span>
+                        </div>
+                        <div class="product-footer">
+                                <span class="price-current"
+                                      th:text="${p.lowestPrice != null} ?
+                                                ${#numbers.formatDecimal(p.lowestPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫' :
+                                                'Contact for price'">
+                                </span>
+                            <button class="btn-cart" th:data-product-id="${p.productId}">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div class="products-empty"
+                 th:if="${#lists.isEmpty(productPage.content)}">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                     style="color:#ccc">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <h3>No products found</h3>
+                <p>Try adjusting your filters or search term.</p>
+                <a href="/products" class="btn btn-outline" style="margin-top:1rem">Clear all filters</a>
+            </div>
+
+            <!-- ============================================================
+                 PAGINATION
+            ============================================================ -->
+            <nav class="pagination" th:if="${totalPages > 1}" aria-label="Product pages">
+
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, page=${currentPage - 1})}"
+                   class="page-btn page-btn--arrow" aria-label="Previous">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </a>
+                <span th:if="${currentPage == 0}" class="page-btn page-btn--arrow page-btn--disabled">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+
+                <th:block th:with="total=${totalPages}, cur=${currentPage}">
+
+                    <a th:if="${cur != 0}"
+                       th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, page=0)}"
+                       class="page-btn">1</a>
+                    <span th:if="${cur == 0}" class="page-btn page-btn--active">1</span>
+
+                    <span th:if="${cur > 3}" class="page-ellipsis">…</span>
+
+                    <th:block th:with="winStart=${cur > 2 ? cur - 2 : 1},
+                                          winEnd=${cur < total - 3 ? cur + 2 : total - 2}">
+                        <th:block th:each="i : ${#numbers.sequence(winStart, winEnd)}">
+                            <a th:if="${i != cur}"
+                               th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, page=${i})}"
+                               th:text="${i + 1}" class="page-btn"></a>
+                            <span th:if="${i == cur}"
+                                  th:text="${i + 1}" class="page-btn page-btn--active"></span>
+                        </th:block>
+                    </th:block>
+
+                    <span th:if="${cur < total - 4}" class="page-ellipsis">…</span>
+
+                    <th:block th:if="${total > 1}">
+                        <a th:if="${cur != total - 1}"
+                           th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, page=${total - 1})}"
+                           th:text="${total}" class="page-btn"></a>
+                        <span th:if="${cur == total - 1}"
+                              th:text="${total}" class="page-btn page-btn--active"></span>
+                    </th:block>
+
+                </th:block>
+
+                <a th:if="${currentPage < totalPages - 1}"
+                   th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, page=${currentPage + 1})}"
+                   class="page-btn page-btn--arrow" aria-label="Next">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <span th:if="${currentPage >= totalPages - 1}" class="page-btn page-btn--arrow page-btn--disabled">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+
+            </nav>
+
+        </div><!-- /.products-content -->
+    </div><!-- /.products-container -->
+</main>
+
+<!-- ================================================================
+     FOOTER
+================================================================ -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div class="footer-col footer-col--brand">
+                <a href="/" class="footer-logo">
+                    <span class="logo-volt">VOLT</span><span class="logo-ex">EX</span>
+                </a>
+                <p class="footer-about">
+                    Voltex is your destination for premium electronics. We curate the finest
+                    smartphones, laptops, audio gear, and wearables.
+                </p>
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                    <a href="#" class="social-link" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Customer Support</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Track Your Order</a></li>
+                    <li><a href="#" class="footer-link">Returns &amp; Exchanges</a></li>
+                    <li><a href="#" class="footer-link">Warranty Claims</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Company</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">About Voltex</a></li>
+                    <li><a href="#" class="footer-link">Careers</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Contact Us</h4>
+                <div class="footer-contact">
+                    <div class="contact-item"><strong>Address</strong><span>123 Tech Street, District 1<br />Ho Chi Minh City, Vietnam</span></div>
+                    <div class="contact-item"><strong>Phone</strong><span>+84 (0)28 1234 5678</span></div>
+                    <div class="contact-item"><strong>Email</strong><span>support@voltex.vn</span></div>
+                    <div class="contact-item"><strong>Hours</strong><span>Mon – Sat, 9:00 AM – 9:00 PM</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span class="footer-copy">&copy; 2025 Voltex Electronics. All rights reserved.</span>
+            <div class="footer-pay">
+                <span class="pay-label">We accept:</span>
+                <span class="pay-chip">Visa</span>
+                <span class="pay-chip">Mastercard</span>
+                <span class="pay-chip">VNPay</span>
+                <span class="pay-chip">COD</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    /* ── Sticky navbar ──────────────────────────────────── */
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        navbar.classList.toggle('navbar--scrolled', window.scrollY > 10);
+    }, { passive: true });
+
+    /* ── Mobile menu ────────────────────────────────────── */
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+        document.getElementById('mobileNav').classList.toggle('mobile-nav--open');
+        document.getElementById('mobileMenuBtn').classList.toggle('mobile-menu-btn--open');
+    });
+
+    /* ── Search category dropdown ───────────────────────── */
+    const searchCatBtn      = document.getElementById('searchCatBtn');
+    const searchCatDropdown = document.getElementById('searchCatDropdown');
+    const searchCatLabel    = document.getElementById('searchCatLabel');
+    const searchHiddenCat   = document.getElementById('searchHiddenCat');
+
+    searchCatBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        searchCatDropdown.classList.toggle('search-cat-dropdown--open');
+        searchCatBtn.classList.toggle('search-cat-btn--open');
+    });
+
+    searchCatDropdown.querySelectorAll('.search-cat-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const label = opt.dataset.label || opt.textContent.trim();
+            const value = opt.dataset.value || '';
+            searchCatLabel.textContent = label === 'All Categories' ? 'All' : label;
+            searchHiddenCat.value = value;
+            searchCatDropdown.querySelectorAll('.search-cat-option')
+                .forEach(o => o.classList.remove('search-cat-option--active'));
+            opt.classList.add('search-cat-option--active');
+            searchCatDropdown.classList.remove('search-cat-dropdown--open');
+            searchCatBtn.classList.remove('search-cat-btn--open');
+        });
+    });
+
+    document.addEventListener('click', () => {
+        searchCatDropdown.classList.remove('search-cat-dropdown--open');
+        searchCatBtn.classList.remove('search-cat-btn--open');
+    });
+
+    /* ── Add-to-cart feedback ───────────────────────────── */
+    document.querySelectorAll('.btn-cart').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const orig = this.textContent;
+            this.textContent = 'Added!';
+            this.classList.add('btn-cart--added');
+            setTimeout(() => {
+                this.textContent = orig;
+                this.classList.remove('btn-cart--added');
+            }, 1500);
+        });
+    });
+</script>
+
+</body>
+</html>
