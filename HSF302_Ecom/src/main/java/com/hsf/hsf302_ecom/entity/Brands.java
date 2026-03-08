@@ -26,7 +26,7 @@ public class Brands {
     @Size(min = 2, max = 100, message = "Brand name must be between 2 and 100 characters")
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private Boolean status;
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
