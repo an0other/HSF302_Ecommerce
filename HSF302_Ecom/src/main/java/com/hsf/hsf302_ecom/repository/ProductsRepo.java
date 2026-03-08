@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -46,16 +47,20 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:brandId    IS NULL OR b.id = :brandId)
           AND (:keyword    IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                                    OR LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-          AND (:minRating  IS NULL OR
-               (SELECT COALESCE(AVG(CAST(r2.rating AS double)), 0) FROM Reviews r2 WHERE r2.product = p)
-               >= :minRating)
+          AND (:minPrice   IS NULL OR
+               (SELECT MIN(pv2.price) FROM ProductVariants pv2 WHERE pv2.product = p AND pv2.status = true)
+               >= :minPrice)
+          AND (:maxPrice   IS NULL OR
+               (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
+               <= :maxPrice)
         ORDER BY p.createdDate DESC
         """)
     Page<HomeProductDTO> findByFilterNewest(
             @Param("categoryId") Long categoryId,
             @Param("brandId")    Long brandId,
             @Param("keyword")    String keyword,
-            @Param("minRating")  Integer minRating,
+            @Param("minPrice")   BigDecimal minPrice,
+            @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
     /* ── ORDER BY price ASC ──────────────────────────────────────── */
@@ -73,16 +78,20 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:brandId    IS NULL OR b.id = :brandId)
           AND (:keyword    IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                                    OR LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-          AND (:minRating  IS NULL OR
-               (SELECT COALESCE(AVG(CAST(r2.rating AS double)), 0) FROM Reviews r2 WHERE r2.product = p)
-               >= :minRating)
+          AND (:minPrice   IS NULL OR
+               (SELECT MIN(pv2.price) FROM ProductVariants pv2 WHERE pv2.product = p AND pv2.status = true)
+               >= :minPrice)
+          AND (:maxPrice   IS NULL OR
+               (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
+               <= :maxPrice)
         ORDER BY (SELECT MIN(pv.price) FROM ProductVariants pv WHERE pv.product = p AND pv.status = true) ASC
         """)
     Page<HomeProductDTO> findByFilterPriceAsc(
             @Param("categoryId") Long categoryId,
             @Param("brandId")    Long brandId,
             @Param("keyword")    String keyword,
-            @Param("minRating")  Integer minRating,
+            @Param("minPrice")   BigDecimal minPrice,
+            @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
     /* ── ORDER BY price DESC ─────────────────────────────────────── */
@@ -100,16 +109,20 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:brandId    IS NULL OR b.id = :brandId)
           AND (:keyword    IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                                    OR LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-          AND (:minRating  IS NULL OR
-               (SELECT COALESCE(AVG(CAST(r2.rating AS double)), 0) FROM Reviews r2 WHERE r2.product = p)
-               >= :minRating)
+          AND (:minPrice   IS NULL OR
+               (SELECT MIN(pv2.price) FROM ProductVariants pv2 WHERE pv2.product = p AND pv2.status = true)
+               >= :minPrice)
+          AND (:maxPrice   IS NULL OR
+               (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
+               <= :maxPrice)
         ORDER BY (SELECT MIN(pv.price) FROM ProductVariants pv WHERE pv.product = p AND pv.status = true) DESC
         """)
     Page<HomeProductDTO> findByFilterPriceDesc(
             @Param("categoryId") Long categoryId,
             @Param("brandId")    Long brandId,
             @Param("keyword")    String keyword,
-            @Param("minRating")  Integer minRating,
+            @Param("minPrice")   BigDecimal minPrice,
+            @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
     /* ── ORDER BY rating DESC ────────────────────────────────────── */
@@ -127,28 +140,32 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:brandId    IS NULL OR b.id = :brandId)
           AND (:keyword    IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                                    OR LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-          AND (:minRating  IS NULL OR
-               (SELECT COALESCE(AVG(CAST(r2.rating AS double)), 0) FROM Reviews r2 WHERE r2.product = p)
-               >= :minRating)
+          AND (:minPrice   IS NULL OR
+               (SELECT MIN(pv2.price) FROM ProductVariants pv2 WHERE pv2.product = p AND pv2.status = true)
+               >= :minPrice)
+          AND (:maxPrice   IS NULL OR
+               (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
+               <= :maxPrice)
         ORDER BY (SELECT COALESCE(AVG(CAST(r3.rating AS double)), 0) FROM Reviews r3 WHERE r3.product = p) DESC
         """)
     Page<HomeProductDTO> findByFilterRating(
             @Param("categoryId") Long categoryId,
             @Param("brandId")    Long brandId,
             @Param("keyword")    String keyword,
-            @Param("minRating")  Integer minRating,
+            @Param("minPrice")   BigDecimal minPrice,
+            @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
     /* ── Dispatcher used by ProductServiceImpl ───────────────────── */
     default Page<HomeProductDTO> findByFilter(
             Long categoryId, Long brandId, String keyword,
-            String sort, Integer minRating, Pageable pageable) {
+            String sort, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
         if ("price_asc".equals(sort))
-            return findByFilterPriceAsc(categoryId, brandId, keyword, minRating, pageable);
+            return findByFilterPriceAsc(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
         if ("price_desc".equals(sort))
-            return findByFilterPriceDesc(categoryId, brandId, keyword, minRating, pageable);
+            return findByFilterPriceDesc(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
         if ("rating".equals(sort))
-            return findByFilterRating(categoryId, brandId, keyword, minRating, pageable);
-        return findByFilterNewest(categoryId, brandId, keyword, minRating, pageable);
+            return findByFilterRating(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
+        return findByFilterNewest(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
     }
 }

@@ -170,6 +170,201 @@
     color: var(--clr-accent);
 }
 
+/* ── Dual-handle Price Range Slider ──────────────────────── */
+
+/* Price display row */
+.prs-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+    gap: var(--space-2);
+}
+.prs-val {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--clr-accent);
+    background: var(--clr-accent-light);
+    border: 1.5px solid rgba(232,68,26,.2);
+    border-radius: var(--radius-sm);
+    padding: 4px 9px;
+    min-width: 62px;
+    text-align: center;
+    letter-spacing: -.01em;
+    transition: color var(--duration-fast);
+}
+.prs-dash {
+    font-size: 13px;
+    color: var(--clr-text-muted);
+    flex-shrink: 0;
+}
+
+/* Track + thumbs container */
+.prs-track-wrap {
+    position: relative;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    margin: 0 6px;
+}
+
+/* Gray base track */
+.prs-track {
+    position: absolute;
+    left: 0; right: 0;
+    height: 4px;
+    background: var(--clr-border);
+    border-radius: var(--radius-full);
+    pointer-events: none;
+}
+
+/* Colored fill between thumbs */
+.prs-fill {
+    position: absolute;
+    height: 100%;
+    background: var(--clr-accent);
+    border-radius: var(--radius-full);
+    transition: left 60ms linear, width 60ms linear;
+}
+
+/* Base range input reset */
+.prs-thumb {
+    position: absolute;
+    left: 0; right: 0;
+    width: calc(100% + 12px);
+    margin: 0 -6px;
+    height: 4px;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: none;
+    outline: none;
+}
+
+/* Thumb handle */
+.prs-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--clr-surface);
+    border: 2.5px solid var(--clr-accent);
+    box-shadow: 0 2px 6px rgba(232,68,26,.25);
+    cursor: grab;
+    pointer-events: all;
+    transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+.prs-thumb::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--clr-surface);
+    border: 2.5px solid var(--clr-accent);
+    box-shadow: 0 2px 6px rgba(232,68,26,.25);
+    cursor: grab;
+    pointer-events: all;
+    transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+.prs-thumb::-webkit-slider-thumb:hover,
+.prs-thumb:active::-webkit-slider-thumb {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 5px rgba(232,68,26,.12), 0 2px 8px rgba(232,68,26,.3);
+    cursor: grabbing;
+}
+.prs-thumb::-moz-range-thumb:hover,
+.prs-thumb:active::-moz-range-thumb {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 5px rgba(232,68,26,.12), 0 2px 8px rgba(232,68,26,.3);
+}
+
+/* Tick marks row */
+.prs-ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-2);
+    padding: 0 2px;
+    margin-bottom: var(--space-4);
+}
+.prs-ticks span {
+    font-size: 9.5px;
+    color: var(--clr-text-muted);
+    font-weight: 500;
+    letter-spacing: -.01em;
+    line-height: 1;
+}
+
+.price-range-apply {
+    width: 100%;
+    padding: 9px var(--space-4);
+    font-family: var(--font-display);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: #fff;
+    background: var(--clr-accent);
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: background var(--duration-fast), transform var(--duration-fast);
+}
+.price-range-apply:hover {
+    background: var(--clr-accent-hover);
+    transform: translateY(-1px);
+}
+.price-range-apply:active { transform: scale(.97); }
+
+.price-range-clear {
+    display: block;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--clr-text-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast);
+}
+.price-range-clear:hover { color: var(--clr-accent); }
+
+/* Quick price preset chips */
+.price-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+.price-preset {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    background: var(--clr-surface-alt);
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color var(--duration-fast), border-color var(--duration-fast), background var(--duration-fast);
+}
+.price-preset:hover {
+    color: var(--clr-accent);
+    border-color: var(--clr-accent);
+    background: var(--clr-accent-light);
+}
+.price-preset--active {
+    background: var(--clr-accent);
+    color: #fff;
+    border-color: var(--clr-accent);
+}
+.price-preset--active:hover {
+    background: var(--clr-accent-hover);
+    border-color: var(--clr-accent-hover);
+    color: #fff;
+}
+
 /* ══════════════════════════════════════════════════════════
    MAIN CONTENT
 ══════════════════════════════════════════════════════════ */
@@ -211,30 +406,6 @@
     color: var(--clr-text-muted);
     font-weight: 300;
 }
-
-/* Keyword badge */
-.products-active-filters { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-.filter-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 5px var(--space-3);
-    background: var(--clr-accent-light);
-    color: var(--clr-accent);
-    font-family: var(--font-display);
-    font-size: 12.5px;
-    font-weight: 600;
-    border-radius: var(--radius-full);
-    border: 1.5px solid rgba(232,68,26,.25);
-}
-.filter-badge-remove {
-    display: flex;
-    align-items: center;
-    color: var(--clr-accent);
-    opacity: .7;
-    transition: opacity var(--duration-fast);
-}
-.filter-badge-remove:hover { opacity: 1; }
 
 /* ── Brand pill tabs ─────────────────────────────────────── */
 .products-brand-tabs {

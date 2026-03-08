@@ -22,12 +22,12 @@ public class HomeServiceImpl implements HomeService {
 
     @Override
     public List<Categories> getActiveCategories() {
-        return categoriesRepo.findAllActive();
+        return categoriesRepo.findByStatusTrueOrderByNameAsc();
     }
 
     @Override
     public Map<Categories, List<HomeProductDTO>> getCarouselsByCategory() {
-        List<Categories> cats = categoriesRepo.findAllWithActiveProducts();
+        List<Categories> cats = categoriesRepo.findDistinctByStatusTrueAndProductsStatusTrueOrderByNameAsc();
         Map<Categories, List<HomeProductDTO>> result = new LinkedHashMap<>();
         for (Categories cat : cats) {
             List<HomeProductDTO> products = productsRepo.findNewestByCategory(cat.getId());

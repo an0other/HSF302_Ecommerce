@@ -182,7 +182,6 @@
                                 <img th:src="${p.imageUrl != null ? p.imageUrl : '/img/image1.webp'}"
                                      th:alt="${p.productName}" class="product-img" />
                                 <span th:if="${p.soldCount >= 50}" class="product-badge product-badge--hot">Hot</span>
-                                <span th:if="${p.soldCount < 10}"  class="product-badge product-badge--new">New</span>
                             </div>
                             <div class="product-body">
                                 <span class="product-brand" th:text="${p.brandName}">Brand</span>
