@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,15 +29,15 @@ public class ProductsServiceImpl implements ProductsService {
 
     @Override
     public List<Categories> getActiveCategories() {
-        return categoriesRepo.findAllActive();
+        return categoriesRepo.findByStatusTrueOrderByNameAsc();
     }
 
     @Override
     public Page<HomeProductDTO> getProducts(Long categoryId, Long brandId, String keyword,
-                                            String sort, Integer minRating, int page) {
+                                            String sort, BigDecimal minPrice, BigDecimal maxPrice,
+                                            int page) {
         String kw = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
-        // Sort is handled inside the JPQL query via the sort param string
-        return productsRepo.findByFilter(categoryId, brandId, kw, sort, minRating,
+        return productsRepo.findByFilter(categoryId, brandId, kw, sort, minPrice, maxPrice,
                 PageRequest.of(page, PAGE_SIZE));
     }
 
@@ -49,6 +50,6 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     public List<Brands> getBrandsByCategory(Long categoryId) {
         if (categoryId == null) return Collections.emptyList();
-        return brandsRepo.findByCategory(categoryId);
+        return brandsRepo.findDistinctByProductsStatusTrueAndProductsCategoryIdOrderByNameAsc(categoryId);
     }
 }
