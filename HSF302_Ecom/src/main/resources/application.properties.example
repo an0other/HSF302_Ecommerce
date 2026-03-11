@@ -29,3 +29,17 @@ spring.jpa.properties.hibernate.use_nationalized_character_data=true
 spring.thymeleaf.cache=false
 spring.thymeleaf.prefix=classpath:/templates/
 spring.thymeleaf.suffix=.html
+
+# ==============================
+# GMAIL SMTP CONFIG
+# ==============================
+
+# Spring Mail (Gmail example)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username={Your_Gmail_Address}
+spring.mail.password={Your_Gmail_App_Password}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.required=true
+spring.mail.default-encoding=UTF-8

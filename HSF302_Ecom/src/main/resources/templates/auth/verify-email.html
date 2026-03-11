@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Verify Email — Voltex</title>
+    <link rel="stylesheet" th:href="@{/css/indexstyle.css}"/>
+    <link rel="stylesheet" th:href="@{/css/auth.css}"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+</head>
+<body class="auth-page">
+
+<header class="navbar" style="position:relative;box-shadow:none;">
+    <div class="nav-top-row">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+        </div>
+    </div>
+</header>
+
+<main class="auth-main">
+
+    <!-- Left branding panel -->
+    <div class="auth-brand-panel">
+        <div class="auth-brand-glow" aria-hidden="true"></div>
+        <div class="auth-brand-glow-2" aria-hidden="true"></div>
+        <a href="/" class="auth-brand-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+        <h2 class="auth-brand-headline">Almost<br/><em>there.</em></h2>
+        <p class="auth-brand-sub">
+            Check your inbox. We sent a 6-digit activation code to verify your email address.
+        </p>
+        <div class="auth-brand-features">
+            <div class="auth-brand-feature"><div class="auth-feature-dot"></div><span class="auth-feature-text"><strong>Check your spam folder</strong> if you don't see it</span></div>
+            <div class="auth-brand-feature"><div class="auth-feature-dot"></div><span class="auth-feature-text"><strong>Code expires</strong> in 10 minutes</span></div>
+            <div class="auth-brand-feature"><div class="auth-feature-dot"></div><span class="auth-feature-text"><strong>Resend</strong> if needed</span></div>
+        </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-form-panel">
+        <div class="auth-form-box">
+
+            <!-- Progress steps -->
+            <div class="auth-steps">
+                <div class="auth-step auth-step--done">
+                    <div class="auth-step-circle">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <span class="auth-step-label">Details</span>
+                </div>
+                <div class="auth-step-connector auth-step-connector--done"></div>
+                <div class="auth-step auth-step--active">
+                    <div class="auth-step-circle">2</div>
+                    <span class="auth-step-label">Verify</span>
+                </div>
+                <div class="auth-step-connector"></div>
+                <div class="auth-step">
+                    <div class="auth-step-circle">3</div>
+                    <span class="auth-step-label">Done</span>
+                </div>
+            </div>
+
+            <h1 class="auth-form-title">Check your email</h1>
+            <p class="auth-form-subtitle">
+                We sent a 6-digit code to
+                <strong th:text="${email}" style="color:var(--clr-text-primary)">em****@example.com</strong>.
+                Enter it below to activate your account.
+            </p>
+
+            <!-- Error -->
+            <div class="auth-alert auth-alert--error" th:if="${verifyError}">
+                <svg class="auth-alert-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span th:text="${verifyError}"></span>
+            </div>
+
+            <!-- Info -->
+            <div class="auth-alert auth-alert--info" th:if="${infoMessage}">
+                <svg class="auth-alert-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span th:text="${infoMessage}"></span>
+            </div>
+
+            <form class="auth-form" th:action="@{/register/verify}" method="post" id="verifyForm">
+
+                <!-- OTP digit inputs -->
+                <div class="auth-otp-wrap" id="otpBoxes">
+                    <input type="text" class="auth-otp-input" maxlength="1" data-idx="0" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" />
+                    <input type="text" class="auth-otp-input" maxlength="1" data-idx="1" inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="auth-otp-input" maxlength="1" data-idx="2" inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="auth-otp-input" maxlength="1" data-idx="3" inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="auth-otp-input" maxlength="1" data-idx="4" inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="auth-otp-input" maxlength="1" data-idx="5" inputmode="numeric" pattern="[0-9]" />
+                </div>
+                <input type="hidden" name="code" id="otpHiddenInput" />
+
+                <button type="submit" class="auth-submit-btn" id="verifyBtn">
+                    Verify &amp; Activate
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+
+            </form>
+
+            <p class="auth-otp-meta">
+                Didn't get the code?
+            <form th:action="@{/register/resend}" method="post" style="display:inline;">
+                <button type="submit" class="auth-otp-resend">Resend code</button>
+            </form>
+            </p>
+
+            <p class="auth-switch"><a href="/register">← Back to registration</a></p>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    (function () {
+        var boxes = Array.from(document.querySelectorAll('.auth-otp-input'));
+        var hidden = document.getElementById('otpHiddenInput');
+        var form   = document.getElementById('verifyForm');
+
+        function sync() {
+            hidden.value = boxes.map(b => b.value).join('');
+            boxes.forEach(b => b.classList.toggle('auth-otp-input--filled', b.value !== ''));
+        }
+
+        boxes.forEach(function (box, i) {
+            box.addEventListener('input', function (e) {
+                var val = e.target.value.replace(/\D/g, '');
+                // Handle paste of full code
+                if (val.length > 1) {
+                    val.split('').forEach(function (ch, ci) {
+                        if (boxes[i + ci]) boxes[i + ci].value = ch;
+                    });
+                    var next = boxes[Math.min(i + val.length, boxes.length - 1)];
+                    next && next.focus();
+                } else {
+                    box.value = val;
+                    if (val && i < boxes.length - 1) boxes[i + 1].focus();
+                }
+                sync();
+            });
+
+            box.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && !box.value && i > 0) {
+                    boxes[i - 1].value = '';
+                    boxes[i - 1].focus();
+                    sync();
+                }
+                if (e.key === 'ArrowLeft'  && i > 0)               boxes[i - 1].focus();
+                if (e.key === 'ArrowRight' && i < boxes.length - 1) boxes[i + 1].focus();
+            });
+
+            box.addEventListener('focus', function () { box.select(); });
+        });
+
+        form.addEventListener('submit', function (e) {
+            sync();
+            if (hidden.value.length !== 6) {
+                e.preventDefault();
+                boxes[0].focus();
+            }
+        });
+    })();
+</script>
+</body>
+</html>
