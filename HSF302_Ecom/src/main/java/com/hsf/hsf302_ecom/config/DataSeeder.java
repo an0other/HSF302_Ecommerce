@@ -6,6 +6,7 @@ import com.hsf.hsf302_ecom.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,8 @@ public class DataSeeder implements CommandLineRunner {
     private final ReviewsRepo reviewsRepo;
 
     private static final String IMAGE_PATH = "/img/image1.webp";
+    private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder(12);
+    private static final String HASHED_PASSWORD = ENCODER.encode("111111");
 
     @Override
     @Transactional
@@ -45,7 +48,7 @@ public class DataSeeder implements CommandLineRunner {
         Users admin = Users.builder()
                 .username("admin")
                 .email("admin@ecom.com")
-                .password("admin123")
+                .password(HASHED_PASSWORD)
                 .phone("0901234567")
                 .role(UserRole.ADMIN)
                 .status(UserStatus.ACTIVE)
@@ -54,7 +57,7 @@ public class DataSeeder implements CommandLineRunner {
         Users customer1 = Users.builder()
                 .username("customer1")
                 .email("customer1@gmail.com")
-                .password("customer123")
+                .password(HASHED_PASSWORD)
                 .phone("0912345678")
                 .role(UserRole.CUSTOMER)
                 .status(UserStatus.ACTIVE)
@@ -63,7 +66,7 @@ public class DataSeeder implements CommandLineRunner {
         Users customer2 = Users.builder()
                 .username("customer2")
                 .email("customer2@gmail.com")
-                .password("customer123")
+                .password(HASHED_PASSWORD)
                 .phone("0923456789")
                 .role(UserRole.CUSTOMER)
                 .status(UserStatus.ACTIVE)
@@ -72,14 +75,14 @@ public class DataSeeder implements CommandLineRunner {
         Users customer3 = Users.builder()
                 .username("customer3")
                 .email("customer3@gmail.com")
-                .password("customer123")
+                .password(HASHED_PASSWORD)
                 .phone("0934567890")
                 .role(UserRole.CUSTOMER)
                 .status(UserStatus.ACTIVE)
                 .build();
 
         usersRepo.saveAll(List.of(admin, customer1, customer2, customer3));
-        log.info("Seeded {} users", usersRepo.count());
+        log.info("Seeded {} users (password: 111111)", usersRepo.count());
 
         // ==============================
         // CATEGORIES
@@ -211,16 +214,16 @@ public class DataSeeder implements CommandLineRunner {
                 allVariants.add(variant("Specter Green", "RTX 4060 / 16GB / 512GB", new BigDecimal("29990000"), p));
                 allVariants.add(variant("Specter Green", "RTX 4070 / 32GB / 1TB",   new BigDecimal("38990000"), p));
             } else if (name.contains("iPad Pro")) {
-                allVariants.add(variant("Space Gray", "128GB WiFi",       new BigDecimal("28990000"), p));
-                allVariants.add(variant("Silver",     "256GB WiFi",       new BigDecimal("33990000"), p));
+                allVariants.add(variant("Space Gray", "128GB WiFi",          new BigDecimal("28990000"), p));
+                allVariants.add(variant("Silver",     "256GB WiFi",          new BigDecimal("33990000"), p));
                 allVariants.add(variant("Space Gray", "128GB WiFi+Cellular", new BigDecimal("36990000"), p));
             } else if (name.contains("iPad Air")) {
                 allVariants.add(variant("Blue",      "64GB WiFi",  new BigDecimal("16990000"), p));
                 allVariants.add(variant("Starlight", "256GB WiFi", new BigDecimal("22990000"), p));
             } else if (name.contains("Galaxy Tab S9")) {
-                allVariants.add(variant("Graphite", "128GB WiFi",         new BigDecimal("19990000"), p));
-                allVariants.add(variant("Beige",    "256GB WiFi",         new BigDecimal("23990000"), p));
-                allVariants.add(variant("Graphite", "256GB WiFi+5G",      new BigDecimal("27990000"), p));
+                allVariants.add(variant("Graphite", "128GB WiFi",    new BigDecimal("19990000"), p));
+                allVariants.add(variant("Beige",    "256GB WiFi",    new BigDecimal("23990000"), p));
+                allVariants.add(variant("Graphite", "256GB WiFi+5G", new BigDecimal("27990000"), p));
             } else if (name.contains("WH-1000XM5")) {
                 allVariants.add(variant("Black",  "Standard", new BigDecimal("8490000"), p));
                 allVariants.add(variant("Silver", "Standard", new BigDecimal("8490000"), p));
@@ -228,15 +231,15 @@ public class DataSeeder implements CommandLineRunner {
                 allVariants.add(variant("Black",  "Standard", new BigDecimal("6990000"), p));
                 allVariants.add(variant("Silver", "Standard", new BigDecimal("6990000"), p));
             } else if (name.contains("AirPods Pro")) {
-                allVariants.add(variant("White", "MagSafe Charging Case",    new BigDecimal("6490000"), p));
-                allVariants.add(variant("White", "USB-C Charging Case",      new BigDecimal("6490000"), p));
+                allVariants.add(variant("White", "MagSafe Charging Case", new BigDecimal("6490000"), p));
+                allVariants.add(variant("White", "USB-C Charging Case",   new BigDecimal("6490000"), p));
             } else if (name.contains("Apple Watch Series 9")) {
-                allVariants.add(variant("Midnight", "41mm GPS",         new BigDecimal("10990000"), p));
-                allVariants.add(variant("Starlight","45mm GPS",         new BigDecimal("11990000"), p));
-                allVariants.add(variant("Red",      "45mm GPS+Cellular",new BigDecimal("13990000"), p));
+                allVariants.add(variant("Midnight", "41mm GPS",          new BigDecimal("10990000"), p));
+                allVariants.add(variant("Starlight","45mm GPS",          new BigDecimal("11990000"), p));
+                allVariants.add(variant("Red",      "45mm GPS+Cellular", new BigDecimal("13990000"), p));
             } else if (name.contains("Galaxy Watch 6")) {
-                allVariants.add(variant("Graphite", "40mm",             new BigDecimal("6990000"), p));
-                allVariants.add(variant("Gold",     "44mm",             new BigDecimal("7990000"), p));
+                allVariants.add(variant("Graphite", "40mm", new BigDecimal("6990000"), p));
+                allVariants.add(variant("Gold",     "44mm", new BigDecimal("7990000"), p));
             } else if (name.contains("Smart Band 8")) {
                 allVariants.add(variant("Black",  "Standard", new BigDecimal("990000"), p));
                 allVariants.add(variant("White",  "Standard", new BigDecimal("990000"), p));
@@ -251,7 +254,7 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Seeded {} product variants", productVariantsRepo.count());
 
         // ==============================
-        // PRODUCT IMAGES (≥3 per product)
+        // PRODUCT IMAGES (3 per product)
         // ==============================
         List<ProductImages> allImages = new ArrayList<>();
         for (Products p : products) {
@@ -297,11 +300,10 @@ public class DataSeeder implements CommandLineRunner {
                 {"4", "Solid build quality and responsive. Worth every penny."},
         };
 
-        // Each customer reviews different products to avoid unique constraint violations
         for (int i = 0; i < products.size(); i++) {
-            Products product = products.get(i);
-            Users reviewer = customers.get(i % customers.size());
-            String[] content = reviewContents[i % reviewContents.length];
+            Products product  = products.get(i);
+            Users    reviewer = customers.get(i % customers.size());
+            String[] content  = reviewContents[i % reviewContents.length];
 
             allReviews.add(Reviews.builder()
                     .rating(Byte.parseByte(content[0]))
@@ -314,7 +316,7 @@ public class DataSeeder implements CommandLineRunner {
         reviewsRepo.saveAll(allReviews);
         log.info("Seeded {} reviews", reviewsRepo.count());
 
-        log.info("Data seeding completed successfully!");
+        log.info("Data seeding completed successfully! All accounts use password: 111111");
     }
 
     private ProductVariants variant(String color, String spec, BigDecimal price, Products product) {

@@ -9,6 +9,46 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+    <style>
+        .nav-user-wrap { position: relative; }
+        .nav-user-btn {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 14px 6px 8px;
+            background: var(--clr-surface-alt);
+            border: 1.5px solid var(--clr-border);
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            font-family: var(--font-display); font-size: 13px; font-weight: 600;
+            color: var(--clr-text-primary); white-space: nowrap;
+            transition: border-color var(--duration-fast), background var(--duration-fast);
+        }
+        .nav-user-btn:hover { border-color: var(--clr-accent); background: var(--clr-accent-light); color: var(--clr-accent); }
+        .nav-user-avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--clr-accent);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display); font-size: 11px; font-weight: 800;
+            color: #fff; flex-shrink: 0; text-transform: uppercase;
+        }
+        .nav-user-chevron { color: var(--clr-text-muted); transition: transform var(--duration-normal) var(--ease-out); flex-shrink: 0; }
+        .nav-user-btn--open .nav-user-chevron { transform: rotate(180deg); }
+        .nav-user-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0; min-width: 200px;
+            background: var(--clr-surface); border: 1px solid var(--clr-border);
+            border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+            padding: 6px 0; z-index: 200;
+            opacity: 0; pointer-events: none; transform: translateY(-8px);
+            transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+        }
+        .nav-user-dropdown--open { opacity: 1; pointer-events: all; transform: translateY(0); }
+        .nav-user-dropdown-header { padding: 10px 16px 8px; border-bottom: 1px solid var(--clr-border-light); margin-bottom: 4px; }
+        .nav-user-dropdown-name { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: var(--clr-text-primary); }
+        .nav-user-dropdown-email { font-size: 11.5px; color: var(--clr-text-muted); font-weight: 300; margin-top: 2px; }
+        .nav-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 13.5px; color: var(--clr-text-secondary); text-decoration: none; transition: background var(--duration-fast), color var(--duration-fast); }
+        .nav-dropdown-item:hover { background: var(--clr-surface-alt); color: var(--clr-text-primary); }
+        .nav-dropdown-item--danger:hover { background: #fff1f0; color: #c53030; }
+        .nav-dropdown-divider { height: 1px; background: var(--clr-border-light); margin: 4px 0; }
+    </style>
 </head>
 <body>
 
@@ -38,15 +78,55 @@
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </button>
             </form>
+
+            <!-- ── Nav actions: guest vs logged-in ── -->
             <div class="nav-actions">
-                <a href="/login" class="nav-action-link">Sign In</a>
-                <span class="nav-action-sep">|</span>
-                <a href="/register" class="nav-action-link">Register</a>
+
+                <!-- GUEST -->
+                <th:block th:if="${session.loggedInUser == null}">
+                    <a href="/login"    class="nav-action-link">Sign In</a>
+                    <span class="nav-action-sep">|</span>
+                    <a href="/register" class="nav-action-link">Register</a>
+                </th:block>
+
+                <!-- LOGGED IN -->
+                <th:block th:if="${session.loggedInUser != null}">
+                    <div class="nav-user-wrap" id="navUserWrap">
+                        <button class="nav-user-btn" id="navUserBtn" type="button"
+                                aria-haspopup="true" aria-expanded="false">
+                            <div class="nav-user-avatar"
+                                 th:text="${#strings.substring(session.loggedInUser.username, 0, 1)}">U</div>
+                            <span th:text="'Hello, ' + ${session.loggedInUser.username}">Hello, user</span>
+                            <svg class="nav-user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="nav-user-dropdown" id="navUserDropdown">
+                            <div class="nav-user-dropdown-header">
+                                <div class="nav-user-dropdown-name" th:text="${session.loggedInUser.username}">username</div>
+                                <div class="nav-user-dropdown-email" th:text="${session.loggedInUser.email}">email</div>
+                            </div>
+                            <a href="/orders"  class="nav-dropdown-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                                My Orders
+                            </a>
+                            <a href="/profile" class="nav-dropdown-item">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                My Profile
+                            </a>
+                            <div class="nav-dropdown-divider"></div>
+                            <a href="/logout" class="nav-dropdown-item nav-dropdown-item--danger">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </th:block>
+
                 <a href="/cart" class="nav-cart-btn" aria-label="Cart">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                     <span class="nav-cart-count">0</span>
                 </a>
             </div>
+
             <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
                 <span></span><span></span><span></span>
             </button>
@@ -65,8 +145,18 @@
         <a href="/products" class="mobile-nav-link">All Products</a>
         <a th:each="cat : ${categories}" th:href="@{/products(categoryId=${cat.id})}" th:text="${cat.name}" class="mobile-nav-link"></a>
         <div class="mobile-nav-divider"></div>
-        <a href="/login" class="mobile-nav-link">Sign In</a>
-        <a href="/register" class="mobile-nav-link">Register</a>
+        <!-- Mobile: guest -->
+        <th:block th:if="${session.loggedInUser == null}">
+            <a href="/login"    class="mobile-nav-link">Sign In</a>
+            <a href="/register" class="mobile-nav-link">Register</a>
+        </th:block>
+        <!-- Mobile: logged in -->
+        <th:block th:if="${session.loggedInUser != null}">
+            <a href="/orders"  class="mobile-nav-link" th:text="'Hello, ' + ${session.loggedInUser.username}">Hello, user</a>
+            <a href="/orders"  class="mobile-nav-link">My Orders</a>
+            <a href="/profile" class="mobile-nav-link">My Profile</a>
+            <a href="/logout"  class="mobile-nav-link">Sign Out</a>
+        </th:block>
         <a href="/cart" class="mobile-nav-link">Cart (0)</a>
     </div>
 </header>
@@ -147,33 +237,21 @@
                 </ul>
             </div>
 
-            <!-- Price Range — dual-handle slider -->
             <div class="sidebar-section">
                 <h3 class="sidebar-heading">Price Range</h3>
-
                 <div class="prs-display">
                     <span class="prs-val" id="prsMinLabel">0 &#8363;</span>
                     <span class="prs-dash">&#8212;</span>
                     <span class="prs-val" id="prsMaxLabel">50M &#8363;</span>
                 </div>
-
                 <div class="prs-track-wrap">
-                    <div class="prs-track">
-                        <div class="prs-fill" id="prsFill"></div>
-                    </div>
+                    <div class="prs-track"><div class="prs-fill" id="prsFill"></div></div>
                     <input type="range" class="prs-thumb prs-thumb--min" id="prsMin" min="0" max="50" step="1" value="0" />
                     <input type="range" class="prs-thumb prs-thumb--max" id="prsMax" min="0" max="50" step="1" value="50" />
                 </div>
-
                 <div class="prs-ticks">
-                    <span>0</span>
-                    <span>10M</span>
-                    <span>20M</span>
-                    <span>30M</span>
-                    <span>40M</span>
-                    <span>50M+</span>
+                    <span>0</span><span>10M</span><span>20M</span><span>30M</span><span>40M</span><span>50M+</span>
                 </div>
-
                 <form id="prsForm" th:action="@{/products}" method="get">
                     <input type="hidden" name="categoryId" th:value="${categoryId}" />
                     <input type="hidden" name="brandId"    th:value="${brandId}" />
@@ -183,11 +261,9 @@
                     <input type="hidden" name="maxPrice"   id="prsMaxInput" th:value="${maxPrice}" />
                     <button type="submit" class="price-range-apply">Apply Filter</button>
                 </form>
-
                 <a th:if="${minPrice != null or maxPrice != null}"
                    th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort})}"
                    class="price-range-clear">&#x2715; Clear price filter</a>
-
                 <div class="price-presets">
                     <a th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, maxPrice=5000000)}"
                        th:classappend="${maxPrice != null and maxPrice == 5000000 and minPrice == null} ? ' price-preset--active'"
@@ -279,7 +355,6 @@
                 <span th:if="${currentPage == 0}" class="page-btn page-btn--arrow page-btn--disabled">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </span>
-
                 <th:block th:with="total=${totalPages}, cur=${currentPage}">
                     <a th:if="${cur != 0}"
                        th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, minPrice=${minPrice}, maxPrice=${maxPrice}, page=0)}"
@@ -302,7 +377,6 @@
                         <span th:if="${cur == total - 1}" th:text="${total}" class="page-btn page-btn--active"></span>
                     </th:block>
                 </th:block>
-
                 <a th:if="${currentPage < totalPages - 1}"
                    th:href="@{/products(categoryId=${categoryId}, brandId=${brandId}, keyword=${keyword}, sort=${sort}, minPrice=${minPrice}, maxPrice=${maxPrice}, page=${currentPage + 1})}"
                    class="page-btn page-btn--arrow" aria-label="Next">
@@ -360,29 +434,22 @@
             <span class="footer-copy">&copy; 2025 Voltex Electronics. All rights reserved.</span>
             <div class="footer-pay">
                 <span class="pay-label">We accept:</span>
-                <span class="pay-chip">Visa</span>
-                <span class="pay-chip">Mastercard</span>
-                <span class="pay-chip">VNPay</span>
-                <span class="pay-chip">COD</span>
+                <span class="pay-chip">Visa</span><span class="pay-chip">Mastercard</span>
+                <span class="pay-chip">VNPay</span><span class="pay-chip">COD</span>
             </div>
         </div>
     </div>
 </footer>
 
 <script>
-    /* ── Sticky navbar ──────────────────────────────────── */
     const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-        navbar.classList.toggle('navbar--scrolled', window.scrollY > 10);
-    }, { passive: true });
+    window.addEventListener('scroll', () => navbar.classList.toggle('navbar--scrolled', window.scrollY > 10), { passive: true });
 
-    /* ── Mobile menu ────────────────────────────────────── */
     document.getElementById('mobileMenuBtn').addEventListener('click', () => {
         document.getElementById('mobileNav').classList.toggle('mobile-nav--open');
         document.getElementById('mobileMenuBtn').classList.toggle('mobile-menu-btn--open');
     });
 
-    /* ── Search category dropdown ───────────────────────── */
     const searchCatBtn      = document.getElementById('searchCatBtn');
     const searchCatDropdown = document.getElementById('searchCatDropdown');
     const searchCatLabel    = document.getElementById('searchCatLabel');
@@ -405,12 +472,29 @@
             searchCatBtn.classList.remove('search-cat-btn--open');
         });
     });
+
+    /* ── User dropdown ── */
+    const navUserBtn      = document.getElementById('navUserBtn');
+    const navUserDropdown = document.getElementById('navUserDropdown');
+    if (navUserBtn) {
+        navUserBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const open = navUserDropdown.classList.toggle('nav-user-dropdown--open');
+            navUserBtn.classList.toggle('nav-user-btn--open', open);
+            navUserBtn.setAttribute('aria-expanded', open);
+        });
+    }
+
     document.addEventListener('click', () => {
         searchCatDropdown.classList.remove('search-cat-dropdown--open');
         searchCatBtn.classList.remove('search-cat-btn--open');
+        if (navUserBtn) {
+            navUserDropdown && navUserDropdown.classList.remove('nav-user-dropdown--open');
+            navUserBtn.classList.remove('nav-user-btn--open');
+            navUserBtn.setAttribute('aria-expanded', 'false');
+        }
     });
 
-    /* ── Add-to-cart feedback ───────────────────────────── */
     document.querySelectorAll('.btn-cart').forEach(btn => {
         btn.addEventListener('click', function () {
             const orig = this.textContent;
@@ -420,14 +504,8 @@
         });
     });
 
-    /* ══════════════════════════════════════════════════════
-       DUAL-HANDLE PRICE RANGE SLIDER
-       Slider range: 0–50 units where 1 unit = 1 million VND.
-       When max thumb is at 50 → no upper bound (maxPrice = '').
-    ══════════════════════════════════════════════════════ */
     (function () {
         var SMAX = 50, SMIN = 0;
-
         var elMin  = document.getElementById('prsMin');
         var elMax  = document.getElementById('prsMax');
         var fill   = document.getElementById('prsFill');
@@ -435,52 +513,26 @@
         var lblMax = document.getElementById('prsMaxLabel');
         var inMin  = document.getElementById('prsMinInput');
         var inMax  = document.getElementById('prsMaxInput');
-
         if (!elMin) return;
-
-        /* Restore from server-side Thymeleaf values */
         var srvMin = inMin.value ? Math.min(Math.round(Number(inMin.value) / 1000000), SMAX) : SMIN;
         var srvMax = inMax.value ? Math.min(Math.round(Number(inMax.value) / 1000000), SMAX) : SMAX;
-        elMin.value = srvMin;
-        elMax.value = srvMax;
-
+        elMin.value = srvMin; elMax.value = srvMax;
         function fmt(v) {
             if (v <= SMIN) return '0 \u20AB';
             if (v >= SMAX) return SMAX + 'M+ \u20AB';
             return v + 'M \u20AB';
         }
-
         function paint() {
-            var lo = parseFloat(elMin.value);
-            var hi = parseFloat(elMax.value);
-
-            if (lo >= hi) {
-                if (document.activeElement === elMin) {
-                    lo = Math.max(SMIN, hi - 1);
-                    elMin.value = lo;
-                } else {
-                    hi = Math.min(SMAX, lo + 1);
-                    elMax.value = hi;
-                }
-            }
-
-            var range     = SMAX - SMIN;
-            var leftPct   = ((lo - SMIN) / range) * 100;
-            var rightPct  = ((hi - SMIN) / range) * 100;
-
-            fill.style.left  = leftPct + '%';
-            fill.style.width = (rightPct - leftPct) + '%';
-
-            lblMin.textContent = fmt(lo);
-            lblMax.textContent = fmt(hi);
-
+            var lo = parseFloat(elMin.value), hi = parseFloat(elMax.value);
+            if (lo >= hi) { if (document.activeElement === elMin) { lo = Math.max(SMIN, hi - 1); elMin.value = lo; } else { hi = Math.min(SMAX, lo + 1); elMax.value = hi; } }
+            var range = SMAX - SMIN;
+            fill.style.left  = ((lo - SMIN) / range * 100) + '%';
+            fill.style.width = ((hi - lo) / range * 100) + '%';
+            lblMin.textContent = fmt(lo); lblMax.textContent = fmt(hi);
             inMin.value = lo <= SMIN ? '' : lo * 1000000;
             inMax.value = hi >= SMAX ? '' : hi * 1000000;
         }
-
-        elMin.addEventListener('input', paint);
-        elMax.addEventListener('input', paint);
-        paint();
+        elMin.addEventListener('input', paint); elMax.addEventListener('input', paint); paint();
     })();
 </script>
 
