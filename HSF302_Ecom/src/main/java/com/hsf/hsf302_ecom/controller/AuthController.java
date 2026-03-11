@@ -9,20 +9,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
 
 @Controller
 public class AuthController {
 
-    // Session keys — HTTP infrastructure, belongs here not in the service
-    private static final String SK_USER       = "loggedInUser";
-    private static final String SK_PENDING_ID = "_pendingUserId";
+    private static final String SK_USER          = "loggedInUser";
+    private static final String SK_PENDING_ID    = "_pendingUserId";
     private static final String SK_PENDING_EMAIL = "_pendingEmail";
-    private static final String SK_REG_CODE   = "_regCode";
-    private static final String SK_RESET_CODE = "_resetCode";
-    private static final String SK_RESET_UID  = "_resetUserId";
-    private static final String SK_RESET_OK   = "_resetVerified";
+    private static final String SK_REG_CODE      = "_regCode";
+    private static final String SK_RESET_CODE    = "_resetCode";
+    private static final String SK_RESET_UID     = "_resetUserId";
+    private static final String SK_RESET_OK      = "_resetVerified";
 
     private final AuthService authService;
 
@@ -37,30 +37,35 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String loginPage(HttpSession session) {
+    public String loginPage(HttpSession session, Model model) {
         if (session.getAttribute(SK_USER) != null) return "redirect:/";
         return "auth/login";
     }
 
     @PostMapping("/login")
-    public String loginSubmit(@RequestParam("usernameOrEmail") String username,
-                              @RequestParam("password") String password,
+    public String loginSubmit(@RequestParam String usernameOrEmail,
+                              @RequestParam String password,
                               HttpSession session,
-                              Model model) {
-        Optional<Users> result = authService.login(username, password);
+                              Model model,
+                              RedirectAttributes ra) {
+        Optional<Users> result = authService.login(usernameOrEmail, password);
         if (result.isEmpty()) {
             model.addAttribute("loginError", "Invalid credentials or account not activated.");
             return "auth/login";
         }
-        session.setAttribute(SK_USER, result.get());
+        Users user = result.get();
+        session.setAttribute(SK_USER, user);
         session.setMaxInactiveInterval(3600);
+        ra.addFlashAttribute("toast", "Welcome back, " + user.getUsername() + "! \uD83D\uDC4B");
+        ra.addFlashAttribute("toastType", "success");
         return "redirect:/";
     }
 
-
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(HttpSession session, RedirectAttributes ra) {
         session.invalidate();
+        ra.addFlashAttribute("toast", "You've been signed out. See you soon!");
+        ra.addFlashAttribute("toastType", "info");
         return "redirect:/";
     }
 
@@ -96,7 +101,6 @@ public class AuthController {
         session.setAttribute(SK_PENDING_EMAIL, result.user().getEmail());
         session.setAttribute(SK_REG_CODE,      result.code());
 
-        model.addAttribute("maskedEmail", maskEmail(result.user().getEmail()));
         return "redirect:/register/verify";
     }
 
@@ -104,40 +108,44 @@ public class AuthController {
     public String verifyPage(HttpSession session, Model model) {
         if (session.getAttribute(SK_PENDING_ID) == null) return "redirect:/register";
         String email = (String) session.getAttribute(SK_PENDING_EMAIL);
-        model.addAttribute("maskedEmail", email != null ? maskEmail(email) : "");
+        model.addAttribute("email", email != null ? maskEmail(email) : "");
         return "auth/verify-email";
     }
 
     @PostMapping("/register/verify")
-    public String verifySubmit(@RequestParam("code") String code,
+    public String verifySubmit(@RequestParam String code,
                                HttpSession session,
-                               Model model) {
+                               Model model,
+                               RedirectAttributes ra) {
         Long   userId = (Long)   session.getAttribute(SK_PENDING_ID);
         String stored = (String) session.getAttribute(SK_REG_CODE);
         if (userId == null) return "redirect:/register";
 
         boolean ok = authService.activateAccount(userId, code, stored);
         if (!ok) {
-            model.addAttribute("otpError", "Incorrect code. Please try again.");
+            model.addAttribute("verifyError", "Incorrect code. Please try again.");
             String email = (String) session.getAttribute(SK_PENDING_EMAIL);
-            model.addAttribute("maskedEmail", email != null ? maskEmail(email) : "");
+            model.addAttribute("email", email != null ? maskEmail(email) : "");
             return "auth/verify-email";
         }
 
         session.removeAttribute(SK_PENDING_ID);
         session.removeAttribute(SK_PENDING_EMAIL);
         session.removeAttribute(SK_REG_CODE);
-        return "redirect:/login?activated=true";
+        ra.addFlashAttribute("successMessage", "Account activated! Welcome to Voltex \uD83C\uDF89");
+        return "redirect:/login";
     }
 
     @PostMapping("/register/resend")
-    public String resendActivation(HttpSession session) {
+    public String resendActivation(HttpSession session, Model model) {
         String email = (String) session.getAttribute(SK_PENDING_EMAIL);
         if (email == null) return "redirect:/register";
 
         String newCode = authService.resendActivationCode(email);
         session.setAttribute(SK_REG_CODE, newCode);
-        return "redirect:/register/verify";
+        model.addAttribute("infoMessage", "A new code has been sent to " + maskEmail(email) + ".");
+        model.addAttribute("email", maskEmail(email));
+        return "auth/verify-email";
     }
 
     @GetMapping("/forgot-password")
@@ -150,17 +158,15 @@ public class AuthController {
     public String forgotSubmit(@RequestParam String identifier,
                                HttpSession session,
                                Model model) {
-
         Optional<AuthService.PasswordResetResult> result = authService.initiatePasswordReset(identifier);
         if (result.isEmpty()) {
-            model.addAttribute("resetError", "No active account found with that email or username.");
+            model.addAttribute("forgotError", "No active account found with that email or username.");
             return "auth/forgot-password";
         }
 
         session.setAttribute(SK_RESET_UID,  result.get().user().getId());
         session.setAttribute(SK_RESET_CODE, result.get().code());
 
-        model.addAttribute("maskedEmail", maskEmail(result.get().user().getEmail()));
         return "redirect:/forgot-password/verify";
     }
 
@@ -179,7 +185,7 @@ public class AuthController {
         if (userId == null) return "redirect:/forgot-password";
 
         if (stored == null || !stored.equals(code)) {
-            model.addAttribute("otpError", "Incorrect code. Please try again.");
+            model.addAttribute("resetVerifyError", "Incorrect code. Please try again.");
             return "auth/reset-verify";
         }
 
@@ -199,24 +205,25 @@ public class AuthController {
     public String newPasswordSubmit(@RequestParam String newPassword,
                                     @RequestParam String confirmNewPassword,
                                     HttpSession session,
-                                    Model model) {
+                                    Model model,
+                                    RedirectAttributes ra) {
         Boolean verified = (Boolean) session.getAttribute(SK_RESET_OK);
         Long    userId   = (Long)    session.getAttribute(SK_RESET_UID);
         if (verified == null || !verified || userId == null) return "redirect:/forgot-password";
 
         if (newPassword.length() < 6) {
-            model.addAttribute("pwError", "Password must be at least 6 characters.");
+            model.addAttribute("newPassError", "Password must be at least 6 characters.");
             return "auth/new-password";
         }
         if (!newPassword.equals(confirmNewPassword)) {
-            model.addAttribute("pwError", "Passwords do not match.");
+            model.addAttribute("newPassError", "Passwords do not match.");
             return "auth/new-password";
         }
 
         authService.resetPassword(userId, newPassword);
-
         session.removeAttribute(SK_RESET_UID);
         session.removeAttribute(SK_RESET_OK);
-        return "redirect:/login?reset=true";
+        ra.addFlashAttribute("successMessage", "Password reset successful! Sign in with your new password.");
+        return "redirect:/login";
     }
 }
