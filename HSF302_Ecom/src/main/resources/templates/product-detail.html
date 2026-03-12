@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${product.productName} + ' — Voltex'">Product — Voltex</title>
+    <link rel="stylesheet" th:href="@{/css/indexstyle.css}" />
+    <link rel="stylesheet" th:href="@{/css/product-detail.css}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <style>
+        body, input, button, select, textarea,
+        .pd-info, .pd-spec-name, .pd-stock-text, .pd-trust-text,
+        .pd-review-comment, .pd-review-user, .pd-desc-text, .pd-card-title,
+        .pd-price, .pd-price-label, .pd-qty-val, .pd-add-btn, .pd-buy-btn,
+        .nav-dropdown-item, .footer-link, .pd-breadcrumb, .pd-avg-label,
+        .nav-action-link, .nav-cat-link, .search-input, .pd-selector-label,
+        .pd-color-opt, .pd-spec-opt, .pd-stock-text, .pd-review-date,
+        .pd-trust-text strong, .pd-trust-text span {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+        }
+        .pd-title { font-family: 'Syne', sans-serif !important; letter-spacing: -0.02em; }
+    </style>
+    <style>
+        .nav-user-wrap { position: relative; }
+        /* Full-width trust bar below hero */
+        .pd-trust--full {
+            display: flex; flex-wrap: wrap; gap: 0;
+            border: 1px solid var(--clr-border); border-radius: var(--radius-md);
+            background: var(--clr-surface); margin: 24px 0 0;
+            overflow: hidden;
+        }
+        .pd-trust--full .pd-trust-item {
+            flex: 1 1 180px; display: flex; align-items: center; gap: 12px;
+            padding: 18px 20px; border-right: 1px solid var(--clr-border-light);
+        }
+        .pd-trust--full .pd-trust-item:last-child { border-right: none; }
+        /* Stacked lower section */
+        .pd-lower--stacked { display: flex; flex-direction: column; gap: 24px; }
+        .pd-lower--stacked .pd-description-card,
+        .pd-lower--stacked .pd-reviews-card { width: 100%; max-width: 100%; }
+        /* Star icons */
+        .star-icon { font-size: 18px; line-height: 1; }
+        .star-filled { color: #f59e0b; }
+        .star-empty  { color: #d1d5db; }
+        .pd-avg-stars-text, .pd-review-stars-text { display: flex; gap: 2px; align-items: center; }
+        .pd-avg-stars-text .star-icon { font-size: 22px; }
+        .nav-user-btn {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 14px 6px 8px;
+            background: var(--clr-surface-alt); border: 1.5px solid var(--clr-border);
+            border-radius: var(--radius-full); cursor: pointer;
+            font-family: var(--font-display); font-size: 13px; font-weight: 600;
+            color: var(--clr-text-primary); white-space: nowrap;
+            transition: border-color var(--duration-fast), background var(--duration-fast);
+        }
+        .nav-user-btn:hover { border-color: var(--clr-accent); background: var(--clr-accent-light); color: var(--clr-accent); }
+        .nav-user-avatar {
+            width: 26px; height: 26px; border-radius: 50%; background: var(--clr-accent);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display); font-size: 11px; font-weight: 800;
+            color: #fff; flex-shrink: 0; text-transform: uppercase;
+        }
+        .nav-user-chevron { color: var(--clr-text-muted); transition: transform var(--duration-normal) var(--ease-out); flex-shrink: 0; }
+        .nav-user-btn--open .nav-user-chevron { transform: rotate(180deg); }
+        .nav-user-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0; min-width: 200px;
+            background: var(--clr-surface); border: 1px solid var(--clr-border);
+            border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+            padding: 6px 0; z-index: 200; opacity: 0; pointer-events: none; transform: translateY(-8px);
+            transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+        }
+        .nav-user-dropdown--open { opacity: 1; pointer-events: all; transform: translateY(0); }
+        .nav-user-dropdown-header { padding: 10px 16px 8px; border-bottom: 1px solid var(--clr-border-light); margin-bottom: 4px; }
+        .nav-user-dropdown-name { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: var(--clr-text-primary); }
+        .nav-user-dropdown-email { font-size: 11.5px; color: var(--clr-text-muted); font-weight: 300; margin-top: 2px; }
+        .nav-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 13.5px; color: var(--clr-text-secondary); text-decoration: none; transition: background var(--duration-fast), color var(--duration-fast); }
+        .nav-dropdown-item:hover { background: var(--clr-surface-alt); color: var(--clr-text-primary); }
+        .nav-dropdown-item--danger:hover { background: #fff1f0; color: #c53030; }
+        .nav-dropdown-divider { height: 1px; background: var(--clr-border-light); margin: 4px 0; }
+    </style>
+</head>
+<body>
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════ -->
+<header class="navbar" id="navbar">
+    <div class="nav-top-row">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+
+            <form class="nav-search" th:action="@{/products}" method="get">
+                <div class="search-cat-select" id="searchCatSelect">
+                    <button class="search-cat-btn" id="searchCatBtn" type="button">
+                        <span id="searchCatLabel">All</span>
+                        <svg class="search-cat-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <ul class="search-cat-dropdown" id="searchCatDropdown">
+                        <li class="search-cat-option search-cat-option--active" data-value="" data-label="All">All Categories</li>
+                        <li th:each="cat : ${categories}" class="search-cat-option"
+                            th:data-value="${cat.id}" th:data-label="${cat.name}" th:text="${cat.name}"></li>
+                    </ul>
+                </div>
+                <input type="hidden" name="categoryId" id="searchHiddenCat" value="" />
+                <div class="search-sep"></div>
+                <input type="text" name="keyword" class="search-input" placeholder="Search products, brands…" autocomplete="off" />
+                <button class="search-btn" type="submit" aria-label="Search">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+            </form>
+
+            <div class="nav-actions">
+                <th:block th:if="${session.loggedInUser == null}">
+                    <a href="/login"    class="nav-action-link">Sign In</a>
+                    <span class="nav-action-sep">|</span>
+                    <a href="/register" class="nav-action-link">Register</a>
+                </th:block>
+                <th:block th:if="${session.loggedInUser != null}">
+                    <div class="nav-user-wrap" id="navUserWrap">
+                        <button class="nav-user-btn" id="navUserBtn" type="button" aria-haspopup="true" aria-expanded="false">
+                            <div class="nav-user-avatar" th:text="${#strings.substring(session.loggedInUser.username, 0, 1)}">U</div>
+                            <span th:text="'Hello, ' + ${session.loggedInUser.username}">Hello, user</span>
+                            <svg class="nav-user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="nav-user-dropdown" id="navUserDropdown">
+                            <div class="nav-user-dropdown-header">
+                                <div class="nav-user-dropdown-name" th:text="${session.loggedInUser.username}">username</div>
+                                <div class="nav-user-dropdown-email" th:text="${session.loggedInUser.email}">email</div>
+                            </div>
+                            <a href="/orders"  class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> My Orders</a>
+                            <a href="/profile" class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> My Profile</a>
+                            <div class="nav-dropdown-divider"></div>
+                            <a href="/logout"  class="nav-dropdown-item nav-dropdown-item--danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</a>
+                        </div>
+                    </div>
+                </th:block>
+                <a href="/cart" class="nav-cart-btn" aria-label="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span class="nav-cart-count">0</span>
+                </a>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+
+    <nav class="nav-cat-strip">
+        <div class="nav-cat-inner">
+            <a href="/products" class="nav-cat-link nav-cat-link--all">All</a>
+            <a th:each="cat : ${categories}"
+               th:href="@{/products(categoryId=${cat.id})}"
+               th:text="${cat.name}"
+               th:classappend="${product.categoryId != null and product.categoryId == cat.id} ? ' nav-cat-link--active'"
+               class="nav-cat-link"></a>
+        </div>
+    </nav>
+
+    <div class="mobile-nav" id="mobileNav">
+        <a href="/products" class="mobile-nav-link">All Products</a>
+        <a th:each="cat : ${categories}" th:href="@{/products(categoryId=${cat.id})}" th:text="${cat.name}" class="mobile-nav-link"></a>
+        <div class="mobile-nav-divider"></div>
+        <th:block th:if="${session.loggedInUser == null}">
+            <a href="/login"    class="mobile-nav-link">Sign In</a>
+            <a href="/register" class="mobile-nav-link">Register</a>
+        </th:block>
+        <th:block th:if="${session.loggedInUser != null}">
+            <a href="/orders"  class="mobile-nav-link" th:text="'Hello, ' + ${session.loggedInUser.username}">Hello, user</a>
+            <a href="/orders"  class="mobile-nav-link">My Orders</a>
+            <a href="/profile" class="mobile-nav-link">My Profile</a>
+            <a href="/logout"  class="mobile-nav-link">Sign Out</a>
+        </th:block>
+        <a href="/cart" class="mobile-nav-link">Cart (0)</a>
+    </div>
+</header>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════════ -->
+<main class="pd-main">
+    <div class="pd-container">
+
+        <!-- Breadcrumb -->
+        <nav class="pd-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span class="pd-breadcrumb-sep">/</span>
+            <a href="/products">Products</a>
+            <span class="pd-breadcrumb-sep">/</span>
+            <a th:if="${product.categoryId != null}"
+               th:href="@{/products(categoryId=${product.categoryId})}"
+               th:text="${product.categoryName}">Category</a>
+            <span th:if="${product.categoryId != null}" class="pd-breadcrumb-sep">/</span>
+            <span class="pd-breadcrumb-curr" th:text="${product.productName}">Product</span>
+        </nav>
+
+        <!-- ═══ HERO: gallery + info ═══════════════════════════ -->
+        <div class="pd-hero">
+
+            <!-- Gallery -->
+            <div class="pd-gallery">
+                <div class="pd-main-img-wrap">
+                    <img id="pdMainImg"
+                         th:src="${not #lists.isEmpty(product.images)} ? ${product.images[0].imageUrl} : '/img/image1.webp'"
+                         th:alt="${product.productName}"
+                         class="pd-main-img" />
+                    <span class="pd-img-zoom-hint">Hover to zoom</span>
+                </div>
+                <div class="pd-thumbnails" th:if="${#lists.size(product.images) > 1}">
+                    <div th:each="img, iStat : ${product.images}"
+                         th:classappend="${iStat.index == 0} ? ' pd-thumb--active'"
+                         class="pd-thumb"
+                         th:data-img="${img.imageUrl}"
+                         onclick="selectThumb(this)">
+                        <img th:src="${img.imageUrl}" th:alt="${product.productName + ' image ' + iStat.count}" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info panel -->
+            <div class="pd-info">
+
+                <!-- Title -->
+                <h1 class="pd-title" th:text="${product.productName}">Product Name</h1>
+
+                <!-- Available stock (populated by JS) -->
+                <div class="pd-stock-bar" id="pdStockBar" style="margin-top:10px;margin-bottom:2px;">
+                    <div class="pd-stock-dot" id="pdStockDot"></div>
+                    <span class="pd-stock-text" id="pdStockText">Select a configuration</span>
+                </div>
+
+                <!-- Price -->
+                <div class="pd-price-block">
+                    <span class="pd-price" id="pdPrice"></span>
+                </div>
+
+                <div class="pd-divider"></div>
+
+                <!-- ─── COLOR SELECTOR ─────────────────────────── -->
+                <div class="pd-selector-group" id="colorSelectorGroup">
+                    <div class="pd-color-opts" id="colorOpts">
+                        <!-- populated by JS from variant data -->
+                    </div>
+                </div>
+
+                <!-- ─── SPEC SELECTOR ──────────────────────────── -->
+                <div class="pd-selector-group" id="specSelectorGroup">
+                    <div class="pd-spec-opts" id="specOpts">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+
+
+                <div class="pd-divider"></div>
+
+                <!-- Quantity + CTA -->
+                <div class="pd-qty-row">
+                    <div class="pd-qty-ctrl">
+                        <button class="pd-qty-btn" id="pdQtyMinus" onclick="adjustQty(-1)" aria-label="Decrease" disabled>&#8722;</button>
+                        <span class="pd-qty-val" id="pdQtyVal">1</span>
+                        <button class="pd-qty-btn" id="pdQtyPlus"  onclick="adjustQty(+1)" aria-label="Increase" disabled>+</button>
+                    </div>
+                </div>
+
+                <div class="pd-cta-row">
+                    <button class="pd-add-btn" id="pdAddBtn" disabled onclick="addToCart()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        Add to Cart
+                    </button>
+                    <button class="pd-buy-btn" id="pdBuyBtn" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        Buy Now
+                    </button>
+                </div>
+
+
+            </div><!-- /pd-info -->
+        </div><!-- /pd-hero -->
+
+        <!-- ═══ TRUST BADGES ════════════════════════════════════ -->
+        <div class="pd-trust pd-trust--full">
+            <div class="pd-trust-item">
+                <svg class="pd-trust-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                <div class="pd-trust-text"><strong>Free Shipping</strong><span>Orders over 1M ₫</span></div>
+            </div>
+            <div class="pd-trust-item">
+                <svg class="pd-trust-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div class="pd-trust-text"><strong>2-Year Warranty</strong><span>Full coverage</span></div>
+            </div>
+            <div class="pd-trust-item">
+                <svg class="pd-trust-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.57"/></svg>
+                <div class="pd-trust-text"><strong>30-Day Returns</strong><span>No questions asked</span></div>
+            </div>
+            <div class="pd-trust-item">
+                <svg class="pd-trust-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.08 13.73a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17.92z"/></svg>
+                <div class="pd-trust-text"><strong>24/7 Support</strong><span>Expert help</span></div>
+            </div>
+        </div>
+
+        <!-- ═══ LOWER: description + reviews ═══════════════════ -->
+        <div class="pd-lower pd-lower--stacked">
+
+            <!-- Description -->
+            <div class="pd-description-card">
+                <div class="pd-card-header">
+                    <svg class="pd-card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <h2 class="pd-card-title">Product Description</h2>
+                </div>
+                <div class="pd-description-body">
+                    <p class="pd-desc-text" th:text="${product.description}">Description here.</p>
+                </div>
+            </div>
+
+            <!-- Reviews -->
+            <div class="pd-reviews-card">
+                <div class="pd-card-header">
+                    <svg class="pd-card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <h2 class="pd-card-title">Customer Reviews</h2>
+                </div>
+
+                <div class="pd-reviews-summary" th:if="${product.reviewCount > 0}">
+                    <span class="pd-avg-big" th:text="${product.avgRatingFormatted}">0.0</span>
+                    <div class="pd-avg-meta">
+                        <div class="pd-avg-stars-text">
+                            <th:block th:with="fullStars=${#numbers.formatInteger(product.avgRating, 1, 'DEFAULT')}">
+                                <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                      th:classappend="${i <= product.avgRating} ? 'star-filled' : 'star-empty'"
+                                      class="star-icon">★</span>
+                            </th:block>
+                        </div>
+                        <span class="pd-avg-label" th:text="'Based on ' + ${product.reviewCount} + ' review' + (${product.reviewCount == 1} ? '' : 's')">0 reviews</span>
+                    </div>
+                </div>
+
+                <div class="pd-reviews-list" th:if="${not #lists.isEmpty(product.reviews)}">
+                    <div class="pd-review-item" th:each="rev : ${product.reviews}">
+                        <div class="pd-review-header">
+                            <div class="pd-review-avatar"
+                                 th:text="${#strings.substring(rev.username, 0, 1)}">U</div>
+                            <div class="pd-review-meta">
+                                <div class="pd-review-user" th:text="${rev.username}">User</div>
+                                <div class="pd-review-date" th:text="${rev.createdAt}">Date</div>
+                            </div>
+                            <div class="pd-review-stars-text">
+                                <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                      th:classappend="${i <= rev.rating} ? 'star-filled' : 'star-empty'"
+                                      class="star-icon">★</span>
+                            </div>
+                        </div>
+                        <p class="pd-review-comment" th:text="${rev.comment}">Comment</p>
+                    </div>
+                </div>
+
+                <div class="pd-no-reviews" th:if="${#lists.isEmpty(product.reviews)}">
+                    No reviews yet. Be the first to review this product!
+                </div>
+            </div>
+
+        </div><!-- /pd-lower -->
+
+    </div><!-- /pd-container -->
+</main>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div class="footer-col footer-col--brand">
+                <a href="/" class="footer-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+                <p class="footer-about">Voltex is your destination for premium electronics.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                    <a href="#" class="social-link" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Customer Support</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Track Your Order</a></li>
+                    <li><a href="#" class="footer-link">Returns &amp; Exchanges</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Company</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">About Voltex</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Contact Us</h4>
+                <div class="footer-contact">
+                    <div class="contact-item"><strong>Phone</strong><span>+84 (0)28 1234 5678</span></div>
+                    <div class="contact-item"><strong>Email</strong><span>support@voltex.vn</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span class="footer-copy">&copy; 2025 Voltex Electronics. All rights reserved.</span>
+            <div class="footer-pay">
+                <span class="pay-label">We accept:</span>
+                <span class="pay-chip">Visa</span><span class="pay-chip">Mastercard</span>
+                <span class="pay-chip">VNPay</span><span class="pay-chip">COD</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- ═══ VARIANT DATA + JS ══════════════════════════════════════ -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    // All variant data injected from Thymeleaf
+    var VARIANTS = /*[[${product.variants}]]*/ [];
+
+    // Normalise Java objects into plain JS objects
+    var variants = VARIANTS.map(function(v) {
+        return {
+            id:             v.id,
+            color:          v.color,
+            spec:           v.spec,
+            price:          v.price,
+            available:      v.available,
+            availableStock: v.availableStock
+        };
+    });
+
+    /*]]>*/
+</script>
+
+<script>
+    /* ══════════════════════════════════════════════════════════
+       VOLTEX — Product Detail Interaction
+       Two-level selection: Color → Spec (filtered by color)
+    ══════════════════════════════════════════════════════════ */
+    (function () {
+
+        var selectedColor   = null;
+        var selectedVariant = null;
+        var qty             = 1;
+
+        /* ── Helpers ───────────────────────────────────────── */
+        function fmt(price) {
+            if (price == null) return '—';
+            return Number(price).toLocaleString('vi-VN') + ' ₫';
+        }
+
+        function uniqueColors() {
+            var seen = {};
+            return variants.filter(function(v) {
+                if (seen[v.color]) return false;
+                seen[v.color] = true;
+                return true;
+            });
+        }
+
+        function variantsForColor(color) {
+            return variants.filter(function(v) { return v.color === color; });
+        }
+
+        function colorHasAvailable(color) {
+            return variantsForColor(color).some(function(v) { return v.available; });
+        }
+
+        function lowestPrice() {
+            var avail = variants.filter(function(v) { return v.available; });
+            if (!avail.length) avail = variants;
+            return avail.reduce(function(min, v) {
+                return (v.price < min) ? v.price : min;
+            }, avail[0].price);
+        }
+
+        /* ── Render color options ──────────────────────────── */
+        function renderColors() {
+            var container = document.getElementById('colorOpts');
+            container.innerHTML = '';
+
+            uniqueColors().forEach(function(v) {
+                var hasAvail = colorHasAvailable(v.color);
+                var btn = document.createElement('div');
+                btn.className = 'pd-color-opt' +
+                    (v.color === selectedColor ? ' pd-opt--selected' : '') +
+                    (!hasAvail ? ' pd-opt--disabled' : '');
+                btn.innerHTML = escHtml(v.color);
+                if (hasAvail) {
+                    btn.addEventListener('click', function() { selectColor(v.color); });
+                }
+                container.appendChild(btn);
+            });
+        }
+
+        /* ── Render spec options for selected color ─────────── */
+        function renderSpecs() {
+            var container = document.getElementById('specOpts');
+            container.innerHTML = '';
+
+            if (!selectedColor) return;
+
+            variantsForColor(selectedColor).forEach(function(v) {
+                var row = document.createElement('div');
+                row.className = 'pd-spec-opt' +
+                    (selectedVariant && selectedVariant.id === v.id ? ' pd-opt--selected' : '') +
+                    (!v.available ? ' pd-opt--disabled' : '');
+
+                var stockLabel = '';
+                var stockClass = 'pd-spec-stock';
+                if (!v.available) {
+                    stockLabel = 'Out of stock';
+                    stockClass += ' pd-spec-stock--out';
+                } else if (v.availableStock <= 5) {
+                    stockLabel = 'Only ' + v.availableStock + ' left!';
+                    stockClass += ' pd-spec-stock--low';
+                } else {
+                    stockLabel = 'In stock';
+                }
+
+                row.innerHTML =
+                    '<div>' +
+                    '<div class="pd-spec-name">' + escHtml(v.spec) + '</div>' +
+                    '<div class="' + stockClass + '">' + stockLabel + '</div>' +
+                    '</div>';
+
+                if (v.available) {
+                    row.addEventListener('click', function() { selectVariant(v); });
+                }
+                container.appendChild(row);
+            });
+        }
+
+        /* ── Select color ──────────────────────────────────── */
+        function selectColor(color) {
+            selectedColor   = color;
+            selectedVariant = null;
+            qty = 1;
+            document.getElementById('pdQtyVal').textContent = 1;
+
+            // auto-select lowest-price available spec for this color
+            var specs = variantsForColor(color).filter(function(v) { return v.available; });
+            specs.sort(function(a,b) { return a.price - b.price; });
+            if (specs.length) selectVariant(specs[0]);
+            else {
+                renderColors();
+                renderSpecs();
+                updateUI();
+            }
+        }
+
+        /* ── Select variant ────────────────────────────────── */
+        function selectVariant(v) {
+            selectedVariant = v;
+            qty = 1;
+            document.getElementById('pdQtyVal').textContent = 1;
+            renderColors();
+            renderSpecs();
+            updateUI();
+        }
+
+        /* ── Update price / stock / CTA ────────────────────── */
+        function updateUI() {
+            var priceEl   = document.getElementById('pdPrice');
+            var dotEl     = document.getElementById('pdStockDot');
+            var textEl    = document.getElementById('pdStockText');
+            var addBtn    = document.getElementById('pdAddBtn');
+            var buyBtn    = document.getElementById('pdBuyBtn');
+            var minusBtn  = document.getElementById('pdQtyMinus');
+            var plusBtn   = document.getElementById('pdQtyPlus');
+
+            if (!selectedVariant) {
+                priceEl.textContent = '';
+                dotEl.className     = 'pd-stock-dot';
+                textEl.innerHTML    = 'Select a configuration above';
+                addBtn.disabled = buyBtn.disabled = minusBtn.disabled = plusBtn.disabled = true;
+                return;
+            }
+
+            priceEl.textContent = fmt(selectedVariant.price);
+
+            var stock = selectedVariant.availableStock;
+            if (!selectedVariant.available || stock <= 0) {
+                dotEl.className  = 'pd-stock-dot pd-stock-dot--out';
+                textEl.innerHTML = '<strong>Out of stock</strong> — not currently available';
+                addBtn.disabled = buyBtn.disabled = true;
+                minusBtn.disabled = plusBtn.disabled = true;
+            } else if (stock <= 5) {
+                dotEl.className  = 'pd-stock-dot pd-stock-dot--low';
+                textEl.innerHTML = 'Only <strong>' + stock + '</strong> left in stock — order soon!';
+                addBtn.disabled = buyBtn.disabled = false;
+                minusBtn.disabled = false;
+                plusBtn.disabled = (qty >= stock);
+            } else {
+                dotEl.className  = 'pd-stock-dot';
+                textEl.innerHTML = '<strong>' + stock + '</strong> units available';
+                addBtn.disabled = buyBtn.disabled = false;
+                minusBtn.disabled = false;
+                plusBtn.disabled = (qty >= stock);
+            }
+        }
+
+        /* ── Quantity control ──────────────────────────────── */
+        window.adjustQty = function(delta) {
+            if (!selectedVariant) return;
+            var max = selectedVariant.availableStock;
+            qty = Math.max(1, Math.min(qty + delta, max));
+            document.getElementById('pdQtyVal').textContent = qty;
+            document.getElementById('pdQtyMinus').disabled = (qty <= 1);
+            document.getElementById('pdQtyPlus').disabled  = (qty >= max);
+        };
+
+        /* ── Add to cart (stub) ────────────────────────────── */
+        window.addToCart = function() {
+            if (!selectedVariant) return;
+            var btn = document.getElementById('pdAddBtn');
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Added!';
+            btn.classList.add('pd-add-btn--added');
+            setTimeout(function() { btn.innerHTML = orig; btn.classList.remove('pd-add-btn--added'); }, 1800);
+            if (window.showToast) window.showToast('Added to cart! (' + selectedVariant.color + ' · ' + selectedVariant.spec + ')', 'success');
+        };
+
+        /* ── Thumbnail switcher ────────────────────────────── */
+        window.selectThumb = function(el) {
+            var mainImg = document.getElementById('pdMainImg');
+            mainImg.style.opacity = '0';
+            setTimeout(function() {
+                mainImg.src = el.dataset.img;
+                mainImg.style.opacity = '1';
+            }, 160);
+            document.querySelectorAll('.pd-thumb').forEach(function(t) { t.classList.remove('pd-thumb--active'); });
+            el.classList.add('pd-thumb--active');
+        };
+
+        /* ── Color → CSS color (simple map) ───────────────── */
+        var COLOR_MAP = {
+            'Black':          '#1a1a1a',
+            'White':          '#f5f5f0',
+            'Space Black':    '#2c2c2e',
+            'Space Gray':     '#5a5a5c',
+            'Titanium Black': '#2c2c2e',
+            'Titanium Gray':  '#5a5a5c',
+            'Natural Titanium':'#b4a898',
+            'White Titanium': '#f0ede8',
+            'Silver':         '#c8c8c8',
+            'Starlight':      '#f0e6d3',
+            'Midnight':       '#1c2027',
+            'Red':            '#c0392b',
+            'Pink':           '#f48fb1',
+            'Blue':           '#1565c0',
+            'Yellow':         '#f9a825',
+            'Gold':           '#c9a84c',
+            'Graphite':       '#4a4a4a',
+            'Beige':          '#e8dcc8',
+            'Orange':         '#e65100',
+            'Green':          '#2e7d32',
+            'Purple':         '#6a1b9a',
+        };
+        function colorToHex(colorName) {
+            var key = Object.keys(COLOR_MAP).find(function(k) {
+                return colorName.toLowerCase().includes(k.toLowerCase());
+            });
+            return key ? COLOR_MAP[key] : '#888';
+        }
+
+        function escHtml(s) {
+            return String(s)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        /* ── Init ──────────────────────────────────────────── */
+        function init() {
+            if (!variants || !variants.length) return;
+
+            // Set initial price label
+            document.getElementById('pdPrice').textContent = '';
+
+            renderColors();
+            renderSpecs();
+            updateUI();
+
+            // Auto-select cheapest available color + variant
+            var avail = variants.filter(function(v) { return v.available; });
+            avail.sort(function(a,b) { return a.price - b.price; });
+            if (avail.length) {
+                selectColor(avail[0].color);
+            }
+        }
+
+        init();
+
+        /* ── Navbar logic (reused from other pages) ─────────── */
+        var navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', function() {
+            navbar.classList.toggle('navbar--scrolled', window.scrollY > 10);
+        }, { passive: true });
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('mobileNav').classList.toggle('mobile-nav--open');
+            this.classList.toggle('mobile-menu-btn--open');
+        });
+
+        var searchCatBtn      = document.getElementById('searchCatBtn');
+        var searchCatDropdown = document.getElementById('searchCatDropdown');
+        var searchCatLabel    = document.getElementById('searchCatLabel');
+        var searchHiddenCat   = document.getElementById('searchHiddenCat');
+
+        searchCatBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            searchCatDropdown.classList.toggle('search-cat-dropdown--open');
+            searchCatBtn.classList.toggle('search-cat-btn--open');
+        });
+        searchCatDropdown.querySelectorAll('.search-cat-option').forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                var label = opt.dataset.label || opt.textContent.trim();
+                searchCatLabel.textContent = label === 'All Categories' ? 'All' : label;
+                searchHiddenCat.value = opt.dataset.value || '';
+                searchCatDropdown.querySelectorAll('.search-cat-option').forEach(function(o) { o.classList.remove('search-cat-option--active'); });
+                opt.classList.add('search-cat-option--active');
+                searchCatDropdown.classList.remove('search-cat-dropdown--open');
+                searchCatBtn.classList.remove('search-cat-btn--open');
+            });
+        });
+
+        var navUserBtn      = document.getElementById('navUserBtn');
+        var navUserDropdown = document.getElementById('navUserDropdown');
+        if (navUserBtn) {
+            navUserBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var open = navUserDropdown.classList.toggle('nav-user-dropdown--open');
+                navUserBtn.classList.toggle('nav-user-btn--open', open);
+                navUserBtn.setAttribute('aria-expanded', open);
+            });
+        }
+
+        document.addEventListener('click', function() {
+            searchCatDropdown.classList.remove('search-cat-dropdown--open');
+            searchCatBtn.classList.remove('search-cat-btn--open');
+            if (navUserBtn) {
+                navUserDropdown && navUserDropdown.classList.remove('nav-user-dropdown--open');
+                navUserBtn && navUserBtn.classList.remove('nav-user-btn--open');
+                navUserBtn && navUserBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+    })();
+</script>
+
+<!-- Toast (shared system) -->
+<div id="toastContainer" style="position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:12px;pointer-events:none;max-width:360px;"></div>
+<script>
+    (function(){var ICONS={success:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',error:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',info:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',warning:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'};var PALETTE={success:{bg:'#f0fdf4',border:'#bbf7d0',icon:'#16a34a',text:'#14532d',bar:'#16a34a'},error:{bg:'#fff1f0',border:'#ffd7d5',icon:'#dc2626',text:'#7f1d1d',bar:'#dc2626'},info:{bg:'#fff0ec',border:'rgba(232,68,26,.25)',icon:'#e8441a',text:'#7c2d12',bar:'#e8441a'},warning:{bg:'#fffbeb',border:'#fde68a',icon:'#d97706',text:'#78350f',bar:'#d97706'}};function showToast(msg,type,duration){type=PALETTE[type]?type:'success';duration=duration||4500;var c=PALETTE[type];var container=document.getElementById('toastContainer');if(!container)return;var toast=document.createElement('div');var barId='voltexBar'+Date.now();toast.style.cssText=['display:flex','align-items:flex-start','gap:12px','padding:14px 16px 10px','background:'+c.bg,'border:1.5px solid '+c.border,'border-radius:12px','box-shadow:0 8px 28px rgba(0,0,0,.13)','font-family:var(--font-body,system-ui,sans-serif)','font-size:14px','line-height:1.5','color:'+c.text,'pointer-events:all','cursor:pointer','max-width:360px','width:360px','opacity:0','transform:translateY(16px) scale(.97)','transition:opacity 280ms ease, transform 280ms ease','position:relative','overflow:hidden'].join(';');toast.innerHTML='<span style="color:'+c.icon+';flex-shrink:0;margin-top:1px">'+ICONS[type]+'</span><span style="flex:1">'+msg+'</span><button style="background:none;border:none;cursor:pointer;color:'+c.icon+';opacity:.55;padding:0;flex-shrink:0;font-size:16px;margin-top:-1px;transition:opacity 150ms" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.55">&#x2715;</button><div id="'+barId+'" style="position:absolute;bottom:0;left:0;height:3px;width:100%;background:'+c.bar+';opacity:.3;transition:width '+duration+'ms linear"></div>';container.appendChild(toast);var tid;function dismiss(){clearTimeout(tid);toast.style.opacity='0';toast.style.transform='translateY(8px) scale(.97)';setTimeout(function(){if(toast.parentNode)toast.parentNode.removeChild(toast);},300);}toast.querySelector('button').addEventListener('click',function(e){e.stopPropagation();dismiss();});toast.addEventListener('click',dismiss);requestAnimationFrame(function(){requestAnimationFrame(function(){toast.style.opacity='1';toast.style.transform='translateY(0) scale(1)';var bar=document.getElementById(barId);if(bar)requestAnimationFrame(function(){bar.style.width='0';});});});tid=setTimeout(dismiss,duration);}window.showToast=showToast;})();
+</script>
+</body>
+</html>

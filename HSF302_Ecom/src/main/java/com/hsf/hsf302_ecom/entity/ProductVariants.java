@@ -64,4 +64,10 @@ public class ProductVariants {
 
     @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItems> cartItems;
+
+    @OneToOne(mappedBy = "productVariant")
+    private Inventories inventory;
+
+    @OneToMany(mappedBy = "productVariant", fetch = FetchType.LAZY)
+    private List<OrderItems> orderItems;
 }
