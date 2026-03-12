@@ -312,7 +312,8 @@
             </div>
 
             <div class="products-grid" th:if="${not #lists.isEmpty(productPage.content)}">
-                <div class="product-card" th:each="p : ${productPage.content}">
+                <a th:href="@{/products/{id}(id=${p.productId})}" th:each="p : ${productPage.content}"
+                   class="product-card" style="text-decoration:none;color:inherit;">
                     <div class="product-img-wrap">
                         <img th:src="${p.imageUrl != null ? p.imageUrl : '/img/image1.webp'}" th:alt="${p.productName}" class="product-img" />
                         <span th:if="${p.soldCount >= 50}" class="product-badge product-badge--hot">Hot</span>
@@ -334,7 +335,7 @@
                             <button class="btn-cart" th:data-product-id="${p.productId}">Add to Cart</button>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="products-empty" th:if="${#lists.isEmpty(productPage.content)}">

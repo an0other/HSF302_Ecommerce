@@ -55,7 +55,7 @@ public class DataSeeder implements CommandLineRunner {
                 .build();
 
         Users customer1 = Users.builder()
-                .username("customer1")
+                .username("an0other")
                 .email("customer1@gmail.com")
                 .password(HASHED_PASSWORD)
                 .phone("0912345678")
@@ -194,6 +194,7 @@ public class DataSeeder implements CommandLineRunner {
                 allVariants.add(variant("White",  "512GB", new BigDecimal("30990000"), p));
             } else if (name.contains("Redmi Note 13 Pro")) {
                 allVariants.add(variant("Midnight Black", "128GB", new BigDecimal("7490000"), p));
+                allVariants.add(variant("Midnight Black", "256GB", new BigDecimal("7490000"), p));
                 allVariants.add(variant("Aurora Purple", "256GB", new BigDecimal("8990000"), p));
                 allVariants.add(variant("Coral Pink",    "256GB", new BigDecimal("8990000"), p));
             } else if (name.contains("MacBook Pro 16")) {
