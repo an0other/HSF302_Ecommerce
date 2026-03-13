@@ -548,33 +548,3 @@
     .products-container { padding: 0 var(--space-4); }
     .products-content .products-grid { grid-template-columns: 1fr; }
 }
-
-.nav-logout-btn,
-.mobile-logout-btn {
-    text-decoration: none;
-}
-
-.nav-logout-btn:hover,
-.mobile-logout-btn:hover {
-    opacity: 0.75;
-}
-
-/*
-.logout-form,
-.mobile-logout-form {
-    margin: 0;
-}
-
-.nav-logout-btn,
-.mobile-logout-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font: inherit;
-    padding: 0;
-}
-
-.nav-logout-btn:hover,
-.mobile-logout-btn:hover {
-    opacity: 0.75;
-}*/

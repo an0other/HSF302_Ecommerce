@@ -1,0 +1,30 @@
+### Java & Spring Boot ###
+*.class
+*.jar
+*.war
+*.ear
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+### Configuration Files (Quan trọng) ###
+# Chặn file cấu hình chính nếu chứa pass
+application.properties
+application.yml
+
+# Hoặc chỉ chặn các file cấu hình riêng tư theo profile
+application-local.properties
+application-dev.properties
+application-prod.properties
+
+### IDEs (Eclipse, IntelliJ, VS Code) ###
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+bin/
+
+### OS temp files ###
+.DS_Store
+Thumbs.db

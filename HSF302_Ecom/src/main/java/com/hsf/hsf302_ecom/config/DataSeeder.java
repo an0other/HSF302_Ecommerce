@@ -6,6 +6,7 @@ import com.hsf.hsf302_ecom.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ProductImagesRepo productImagesRepo;
     private final InventoriesRepo inventoriesRepo;
     private final ReviewsRepo reviewsRepo;
+    private final PasswordEncoder passwordEncoder;
 
     private static final String IMAGE_PATH = "/img/image1.webp";
 
@@ -45,7 +47,7 @@ public class DataSeeder implements CommandLineRunner {
         Users admin = Users.builder()
                 .username("admin")
                 .email("admin@ecom.com")
-                .password("admin123")
+                .password(passwordEncoder.encode("admin123"))
                 .phone("0901234567")
                 .role(UserRole.ADMIN)
                 .status(UserStatus.ACTIVE)
@@ -54,7 +56,7 @@ public class DataSeeder implements CommandLineRunner {
         Users customer1 = Users.builder()
                 .username("customer1")
                 .email("customer1@gmail.com")
-                .password("customer123")
+                .password(passwordEncoder.encode("customer123"))
                 .phone("0912345678")
                 .role(UserRole.CUSTOMER)
                 .status(UserStatus.ACTIVE)
@@ -63,7 +65,7 @@ public class DataSeeder implements CommandLineRunner {
         Users customer2 = Users.builder()
                 .username("customer2")
                 .email("customer2@gmail.com")
-                .password("customer123")
+                .password(passwordEncoder.encode("customer123"))
                 .phone("0923456789")
                 .role(UserRole.CUSTOMER)
                 .status(UserStatus.ACTIVE)
@@ -72,7 +74,7 @@ public class DataSeeder implements CommandLineRunner {
         Users customer3 = Users.builder()
                 .username("customer3")
                 .email("customer3@gmail.com")
-                .password("customer123")
+                .password(passwordEncoder.encode("customer123"))
                 .phone("0934567890")
                 .role(UserRole.CUSTOMER)
                 .status(UserStatus.ACTIVE)

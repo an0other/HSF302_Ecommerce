@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voltex — Premium Electronics</title>
+    <link rel="stylesheet" th:href="@{/css/indexstyle.css}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<header class="navbar" id="navbar">
+    <div class="nav-top-row">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo">
+                <span class="logo-volt">VOLT</span><span class="logo-ex">EX</span>
+            </a>
+            <div class="nav-search" id="navSearch">
+                <div class="search-cat-select" id="searchCatSelect">
+                    <button class="search-cat-btn" id="searchCatBtn" type="button">
+                        <span id="searchCatLabel">All</span>
+                        <svg class="search-cat-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <ul class="search-cat-dropdown" id="searchCatDropdown">
+                        <li class="search-cat-option search-cat-option--active" data-value="" data-label="All">All Categories</li>
+                        <li th:each="cat : ${categories}" class="search-cat-option"
+                            th:data-value="${cat.id}" th:data-label="${cat.name}" th:text="${cat.name}"></li>
+                    </ul>
+                </div>
+                <div class="search-sep"></div>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search products, brands…" autocomplete="off" />
+                <button class="search-btn" id="searchSubmit" aria-label="Search">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+            </div>
+            <div class="nav-actions">
+                <a href="/login" class="nav-action-link">Sign In</a>
+                <span class="nav-action-sep">|</span>
+                <a href="/register" class="nav-action-link">Register</a>
+                <a href="/cart" class="nav-cart-btn" aria-label="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span class="nav-cart-count">0</span>
+                </a>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Row 2: category pill strip -->
+    <nav class="nav-cat-strip">
+        <div class="nav-cat-inner">
+            <a href="/products" class="nav-cat-link nav-cat-link--all">All</a>
+            <a th:each="cat : ${categories}"
+               th:href="@{/products(categoryId=${cat.id})}"
+               th:text="${cat.name}"
+               class="nav-cat-link">
+            </a>
+        </div>
+    </nav>
+
+    <div class="mobile-nav" id="mobileNav">
+        <a href="/products" class="mobile-nav-link">All Products</a>
+        <a th:each="cat : ${categories}" th:href="@{/products(categoryId=${cat.id})}" th:text="${cat.name}" class="mobile-nav-link"></a>
+        <div class="mobile-nav-divider"></div>
+        <a href="/login" class="mobile-nav-link">Sign In</a>
+        <a href="/register" class="mobile-nav-link">Register</a>
+        <a href="/cart" class="mobile-nav-link">Cart (0)</a>
+    </div>
+</header>
+
+<main>
+
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-content">
+                <h1 class="hero-headline">Technology<br /><em>Redefined.</em></h1>
+                <p class="hero-desc">Explore the latest smartphones, ultra-thin laptops, noise-canceling headphones, and cutting-edge smartwatches — all in one place.</p>
+                <div class="hero-actions">
+                    <a href="#categories" class="btn btn-primary">Shop Now</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat"><span class="stat-number">500+</span><span class="stat-label">Products</span></div>
+                    <div class="stat-sep"></div>
+                    <div class="stat"><span class="stat-number">50K+</span><span class="stat-label">Happy Customers</span></div>
+                    <div class="stat-sep"></div>
+                    <div class="stat"><span class="stat-number">4.9</span><span class="stat-label">Avg. Rating</span></div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-img-wrap">
+                    <div class="hero-img-bg"></div>
+                    <img th:src="@{/img/image1.webp}" alt="Featured product" class="hero-img" />
+                    <div class="hero-badge hero-badge--top">
+                        <span class="badge-label">Best Seller</span>
+                        <span class="badge-sub">iPhone 15 Pro</span>
+                    </div>
+                    <div class="hero-badge hero-badge--bottom">
+                        <span class="badge-label">From</span>
+                        <span class="badge-price">28,990,000 ₫</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-accent" aria-hidden="true"></div>
+    </section>
+
+    <section class="trust-strip">
+        <div class="trust-inner">
+            <div class="trust-item">
+                <div class="trust-icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+                <div class="trust-text"><strong>Free Shipping</strong><span>Orders over $50</span></div>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+                <div class="trust-icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div class="trust-text"><strong>2-Year Warranty</strong><span>On all products</span></div>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+                <div class="trust-icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.57"/></svg></div>
+                <div class="trust-text"><strong>30-Day Returns</strong><span>Hassle-free policy</span></div>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+                <div class="trust-icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.08 13.73a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17.92z"/></svg></div>
+                <div class="trust-text"><strong>24/7 Support</strong><span>Expert assistance</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SHOP BY CATEGORY — circle bubbles -->
+    <section class="cat-bubbles-section" id="categories" th:if="${not #lists.isEmpty(categories)}">
+        <div class="section-inner">
+            <div class="section-header">
+                <div class="section-label">Explore</div>
+                <h2 class="section-title">Shop by Category</h2>
+                <p class="section-sub">Find exactly what you're looking for</p>
+            </div>
+            <div class="cat-bubbles-grid" id="catBubblesGrid">
+                <a th:each="cat, iterStat : ${categories}"
+                   th:href="@{/products(categoryId=${cat.id})}"
+                   th:classappend="${iterStat.index >= 8} ? ' cat-bubble--hidden' : ''"
+                   class="cat-bubble">
+                    <div class="cat-bubble-img-wrap">
+                        <img th:src="@{/img/image1.webp}" th:alt="${cat.name}" class="cat-bubble-img" />
+                    </div>
+                    <span class="cat-bubble-name" th:text="${cat.name}">Category</span>
+                </a>
+            </div>
+            <div class="cat-bubbles-more" th:if="${#lists.size(categories) > 8}">
+                <button class="cat-bubbles-toggle" id="catBubblesToggle" type="button">
+                    <span class="cat-bubbles-toggle-label">Show all categories</span>
+                    <svg class="cat-bubbles-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CAROUSEL SECTIONS -->
+    <th:block th:each="entry, iterStat : ${carousels}">
+        <section th:with="cat=${entry.key}, products=${entry.value}, carouselId=${'carousel-cat-' + entry.key.id}"
+                 th:class="${iterStat.index % 2 == 0} ? 'carousel-section' : 'carousel-section carousel-section--alt'">
+            <div class="section-inner">
+                <div class="carousel-header">
+                    <div>
+                        <div class="section-label" th:text="${cat.name}">Category</div>
+                        <h2 class="carousel-title">Latest in <em th:text="${cat.name}">Category</em></h2>
+                    </div>
+                    <a th:href="@{/products(categoryId=${cat.id})}" class="carousel-view-all">View all</a>
+                </div>
+                <div class="carousel-track-wrap">
+                    <button class="carousel-arrow carousel-arrow--prev" th:data-target="${carouselId}" aria-label="Previous">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="carousel-track" th:id="${carouselId}">
+                        <div class="product-card" th:each="p : ${products}">
+                            <div class="product-img-wrap">
+                                <img th:src="${p.imageUrl != null ? p.imageUrl : '/img/image1.webp'}"
+                                     th:alt="${p.productName}" class="product-img" />
+                                <span th:if="${p.soldCount >= 50}" class="product-badge product-badge--hot">Hot</span>
+                            </div>
+                            <div class="product-body">
+                                <span class="product-brand" th:text="${p.brandName}">Brand</span>
+                                <h3 class="product-name" th:text="${p.productName}">Name</h3>
+                                <div class="product-rating">
+                                    <div class="stars" th:attr="aria-label=${p.avgRatingFormatted}">
+                                        <div class="stars-fill" th:style="'width:' + ${p.starFillPct} + '%'"></div>
+                                    </div>
+                                    <span class="rating-val" th:text="${p.avgRatingFormatted}">0.0</span>
+                                    <span class="rating-sold" th:text="'· ' + ${p.soldCount} + ' sold'"></span>
+                                </div>
+                                <div class="product-footer">
+                                        <span class="price-current"
+                                              th:text="${p.lowestPrice != null} ? ${#numbers.formatDecimal(p.lowestPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫' : 'Contact for price'">
+                                        </span>
+                                    <button class="btn-cart" th:data-product-id="${p.productId}">Add to Cart</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-arrow carousel-arrow--next" th:data-target="${carouselId}" aria-label="Next">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+                <div class="carousel-dots" th:id="'dots-' + ${carouselId}"></div>
+            </div>
+        </section>
+    </th:block>
+
+</main>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div class="footer-col footer-col--brand">
+                <a href="/" class="footer-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+                <p class="footer-about">Voltex is your destination for premium electronics.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                    <a href="#" class="social-link" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Customer Support</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Track Your Order</a></li>
+                    <li><a href="#" class="footer-link">Returns &amp; Exchanges</a></li>
+                    <li><a href="#" class="footer-link">Warranty Claims</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Company</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">About Voltex</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Contact Us</h4>
+                <div class="footer-contact">
+                    <div class="contact-item"><strong>Address</strong><span>123 Tech Street, District 1<br />Ho Chi Minh City, Vietnam</span></div>
+                    <div class="contact-item"><strong>Phone</strong><span>+84 (0)28 1234 5678</span></div>
+                    <div class="contact-item"><strong>Email</strong><span>support@voltex.vn</span></div>
+                    <div class="contact-item"><strong>Hours</strong><span>Mon – Sat, 9:00 AM – 9:00 PM</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span class="footer-copy">&copy; 2025 Voltex Electronics. All rights reserved.</span>
+            <div class="footer-pay">
+                <span class="pay-label">We accept:</span>
+                <span class="pay-chip">Visa</span><span class="pay-chip">Mastercard</span>
+                <span class="pay-chip">VNPay</span><span class="pay-chip">COD</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => navbar.classList.toggle('navbar--scrolled', window.scrollY > 10), { passive: true });
+
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+        document.getElementById('mobileNav').classList.toggle('mobile-nav--open');
+        document.getElementById('mobileMenuBtn').classList.toggle('mobile-menu-btn--open');
+    });
+
+    const searchCatBtn      = document.getElementById('searchCatBtn');
+    const searchCatDropdown = document.getElementById('searchCatDropdown');
+    const searchCatLabel    = document.getElementById('searchCatLabel');
+
+    searchCatBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        searchCatDropdown.classList.toggle('search-cat-dropdown--open');
+        searchCatBtn.classList.toggle('search-cat-btn--open');
+    });
+    searchCatDropdown.querySelectorAll('.search-cat-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const label = opt.dataset.label || opt.textContent.trim();
+            searchCatLabel.textContent = label === 'All Categories' ? 'All' : label;
+            searchCatDropdown.querySelectorAll('.search-cat-option').forEach(o => o.classList.remove('search-cat-option--active'));
+            opt.classList.add('search-cat-option--active');
+            searchCatDropdown.classList.remove('search-cat-dropdown--open');
+            searchCatBtn.classList.remove('search-cat-btn--open');
+        });
+    });
+    document.addEventListener('click', () => {
+        searchCatDropdown.classList.remove('search-cat-dropdown--open');
+        searchCatBtn.classList.remove('search-cat-btn--open');
+    });
+
+    document.getElementById('searchSubmit').addEventListener('click', () => {
+        const kw  = document.getElementById('searchInput').value.trim();
+        const cat = searchCatDropdown.querySelector('.search-cat-option--active')?.dataset.value || '';
+        const url = new URL('/products', window.location.origin);
+        if (cat) url.searchParams.set('categoryId', cat);
+        if (kw)  url.searchParams.set('keyword', kw);
+        window.location.href = url.toString();
+    });
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('searchSubmit').click();
+    });
+
+    document.querySelectorAll('.btn-cart').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const orig = this.textContent;
+            this.textContent = 'Added!';
+            this.classList.add('btn-cart--added');
+            setTimeout(() => { this.textContent = orig; this.classList.remove('btn-cart--added'); }, 1500);
+        });
+    });
+
+    class Carousel {
+        constructor(trackId) {
+            this.track = document.getElementById(trackId);
+            this.dotsWrap = document.getElementById('dots-' + trackId);
+            if (!this.track) return;
+            this.timer = null;
+            this._buildDots(); this._bindArrows(trackId); this._bindScroll(); this._startAuto();
+            window.addEventListener('resize', () => { this._buildDots(); this._updateDots(); });
+        }
+        _cardStep()     { const c = this.track.querySelector('.product-card'); return c ? c.offsetWidth + 24 : 284; }
+        _visibleCount() { return Math.max(1, Math.round(this.track.offsetWidth / this._cardStep())); }
+        _totalPages()   { return Math.max(1, Math.ceil(this.track.querySelectorAll('.product-card').length / this._visibleCount())); }
+        _currentPage()  { return Math.round(this.track.scrollLeft / (this._cardStep() * this._visibleCount())); }
+        _buildDots() {
+            if (!this.dotsWrap) return;
+            this.dotsWrap.innerHTML = '';
+            for (let i = 0; i < this._totalPages(); i++) {
+                const d = document.createElement('button');
+                d.className = 'carousel-dot' + (i === 0 ? ' carousel-dot--active' : '');
+                d.setAttribute('aria-label', 'Page ' + (i + 1));
+                d.addEventListener('click', () => this.goTo(i));
+                this.dotsWrap.appendChild(d);
+            }
+        }
+        _updateDots() {
+            if (!this.dotsWrap) return;
+            const p = this._currentPage();
+            this.dotsWrap.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('carousel-dot--active', i === p));
+        }
+        _bindArrows(id) {
+            document.querySelectorAll(`[data-target="${id}"]`).forEach(btn =>
+                btn.addEventListener('click', () => btn.classList.contains('carousel-arrow--prev') ? this.prev() : this.next()));
+        }
+        _bindScroll() { this.track.addEventListener('scroll', () => requestAnimationFrame(() => this._updateDots()), { passive: true }); }
+        _startAuto() {
+            this.timer = setInterval(() => this.next(), 4200);
+            this.track.addEventListener('mouseenter', () => clearInterval(this.timer));
+            this.track.addEventListener('mouseleave', () => { clearInterval(this.timer); this.timer = setInterval(() => this.next(), 4200); });
+        }
+        goTo(page) {
+            page = Math.max(0, Math.min(page, this._totalPages() - 1));
+            this.track.scrollTo({ left: page * this._cardStep() * this._visibleCount(), behavior: 'smooth' });
+        }
+        next() { const p = this._currentPage(); this.goTo(p >= this._totalPages() - 1 ? 0 : p + 1); }
+        prev() { const p = this._currentPage(); this.goTo(p <= 0 ? this._totalPages() - 1 : p - 1); }
+    }
+    document.querySelectorAll('.carousel-track').forEach(t => new Carousel(t.id));
+
+    const catToggle = document.getElementById('catBubblesToggle');
+    if (catToggle) {
+        let expanded = false;
+        catToggle.addEventListener('click', () => {
+            expanded = !expanded;
+            document.querySelectorAll('.cat-bubble--hidden').forEach(el => el.classList.toggle('cat-bubble--visible', expanded));
+            catToggle.querySelector('.cat-bubbles-toggle-label').textContent = expanded ? 'Show less' : 'Show all categories';
+            catToggle.querySelector('.cat-bubbles-toggle-icon').style.transform = expanded ? 'rotate(180deg)' : '';
+        });
+    }
+</script>
+
+</body>
+</html>

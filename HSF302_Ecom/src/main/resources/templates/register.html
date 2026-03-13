@@ -1,0 +1,116 @@
+<!--
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+<h2>Đăng ký</h2>
+
+<div th:if="${error}" th:text="${error}" style="color: red"></div>
+
+<form th:action="@{/register}" th:object="${registerRequest}" method="post">
+    <div>
+        <label>Name:</label>
+        <input type="text" th:field="*{username}">
+        <small th:errors="*{username}" style="color: red"></small>
+    </div>
+
+    <div>
+        <label>Email:</label>
+        <input type="email" th:field="*{email}">
+        <small th:errors="*{email}" style="color: red"></small>
+    </div>
+
+    <div>
+        <label>Phone:</label>
+        <input type="text" th:field="*{phone}">
+    </div>
+
+    <div>
+        <label>Password:</label>
+        <input type="password" th:field="*{password}">
+        <small th:errors="*{password}" style="color: red"></small>
+    </div>
+
+    <div>
+        <label>Confirm Password:</label>
+        <input type="password" th:field="*{confirmPassword}">
+        <small th:errors="*{confirmPassword}" style="color: red"></small>
+    </div>
+
+    <button type="submit">Register</button>
+</form>
+
+<p>Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a></p>
+</body>
+</html>-->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Register — Voltex</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body class="auth-page">
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <a href="/" class="auth-brand">
+            <span class="logo-volt">VOLT</span><span class="logo-ex">EX</span>
+        </a>
+
+        <h2 class="auth-title">Đăng ký</h2>
+        <p class="auth-subtitle">Tạo tài khoản mới để mua sắm nhanh hơn tại Voltex.</p>
+
+        <div th:if="${error}" th:text="${error}" class="auth-alert auth-alert--error"></div>
+
+        <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form">
+            <div class="auth-group">
+                <label class="auth-label">Name</label>
+                <input type="text" th:field="*{username}" class="auth-input" placeholder="Nhập tên của bạn">
+                <small th:errors="*{username}" class="auth-error-text"></small>
+            </div>
+
+            <div class="auth-group">
+                <label class="auth-label">Email</label>
+                <input type="email" th:field="*{email}" class="auth-input" placeholder="Nhập email">
+                <small th:errors="*{email}" class="auth-error-text"></small>
+            </div>
+
+            <div class="auth-group">
+                <label class="auth-label">Phone</label>
+                <input type="text" th:field="*{phone}" class="auth-input" placeholder="Nhập số điện thoại">
+            </div>
+
+            <div class="auth-group">
+                <label class="auth-label">Password</label>
+                <input type="password" th:field="*{password}" class="auth-input" placeholder="Nhập mật khẩu">
+                <small th:errors="*{password}" class="auth-error-text"></small>
+            </div>
+
+            <div class="auth-group">
+                <label class="auth-label">Confirm Password</label>
+                <input type="password" th:field="*{confirmPassword}" class="auth-input" placeholder="Nhập lại mật khẩu">
+                <small th:errors="*{confirmPassword}" class="auth-error-text"></small>
+            </div>
+
+            <button type="submit" class="auth-btn">Register</button>
+        </form>
+
+        <div class="auth-footer">
+            Đã có tài khoản?
+            <a th:href="@{/login}" class="auth-link">Đăng nhập</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
