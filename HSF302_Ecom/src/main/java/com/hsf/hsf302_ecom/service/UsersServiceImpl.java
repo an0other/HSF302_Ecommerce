@@ -1,5 +1,6 @@
 package com.hsf.hsf302_ecom.service;
 
+import com.hsf.hsf302_ecom.dto.ChangePasswordRequest;
 import com.hsf.hsf302_ecom.dto.RegisterRequest;
 import com.hsf.hsf302_ecom.entity.Users;
 import com.hsf.hsf302_ecom.enums.UserRole;
@@ -41,11 +42,40 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public boolean authenticate(String email, String rawPassword) {
+    public Users authenticate(String email, String rawPassword) {
         Users user = usersRepo.findByEmailIgnoreCase(email);
 
-        if(user == null) return false;
+        if (user == null) return null;
 
-        return passwordEncoder.matches(rawPassword, user.getPassword());
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            return null;
+        }
+
+        return user;
     }
+
+    @Override
+    public boolean changePassword(Long userId, ChangePasswordRequest request) {
+        Users user = usersRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // check old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không đúng");
+        }
+
+        // check confirm password
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Xác nhận mật khẩu không khớp");
+        }
+
+        // encode password mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        usersRepo.save(user);
+
+        return true;
+    }
+
+
 }

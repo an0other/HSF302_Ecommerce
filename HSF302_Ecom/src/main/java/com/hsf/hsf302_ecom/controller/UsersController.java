@@ -1,5 +1,6 @@
 package com.hsf.hsf302_ecom.controller;
 
+import com.hsf.hsf302_ecom.dto.ChangePasswordRequest;
 import com.hsf.hsf302_ecom.dto.RegisterRequest;
 import com.hsf.hsf302_ecom.entity.Users;
 import com.hsf.hsf302_ecom.service.UsersService;
@@ -30,13 +31,14 @@ public class UsersController {
                           @RequestParam String password,
                           HttpSession session)
     {
-        boolean user = usersService.authenticate(email,password);
-        if(!user){
+        Users user = usersService.authenticate(email,password);
+        if(user==null){
             model.addAttribute("error","Sai tên email hoặc password");
             return "login";
         }
         session.setAttribute("authenticated", true);
         session.setAttribute("userEmail", email);
+        session.setAttribute("loggedInUser", user);
         return "redirect:/products";
     }
 
@@ -72,5 +74,28 @@ public class UsersController {
         return "redirect:/login?logout";
     }
 
+    @GetMapping("/change-password")
+    public String changePasswordPage(Model model) {
+        model.addAttribute("changePasswordRequest", new ChangePasswordRequest());
+        return "change-password";
+    }
+
+    @PostMapping("/change-password")
+    public String changePassword(
+            @ModelAttribute ChangePasswordRequest request,
+            HttpSession session,
+            Model model) {
+
+        Users user = (Users) session.getAttribute("loggedInUser");
+
+        try {
+            usersService.changePassword(user.getId(), request);
+            model.addAttribute("success", "Đổi mật khẩu thành công");
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        return "change-password";
+    }
 }
 
