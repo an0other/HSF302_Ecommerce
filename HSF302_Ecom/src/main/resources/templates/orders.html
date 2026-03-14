@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Orders</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/orders.css}">
+</head>
+<body>
+<div class="container">
+    <h1 class="page-title">Đơn hàng của tôi</h1>
+
+    <div th:if="${!#lists.isEmpty(orders)}" class="card">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Chi tiết</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${orders}">
+                    <td th:text="${order.id}"></td>
+                    <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                    <td>
+                        <span class="status"
+                              th:text="${#strings.capitalize(order.status.name().toLowerCase())}"
+                              th:classappend="${
+                                order.status.name() == 'PENDING' ? ' status-pending' :
+                                order.status.name() == 'CONFIRMED' ? ' status-confirmed' :
+                                order.status.name() == 'PROCESSING' ? ' status-processing' :
+                                order.status.name() == 'SHIPPED' ? ' status-shipped' :
+                                order.status.name() == 'DELIVERED' ? ' status-delivered' :
+                                ' status-cancelled'
+                              }">
+                        </span>
+                    </td>
+                    <td>
+                        <a class="btn-detail" th:href="@{/orders/{id}(id=${order.id})}">
+                            Xem chi tiết
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(orders)}" class="empty-box">
+        <p>Bạn chưa có đơn hàng nào.</p>
+        <a th:href="@{/products}" class="back-home">Tiếp tục mua sắm</a>
+    </div>
+</div>
+</body>
+</html>

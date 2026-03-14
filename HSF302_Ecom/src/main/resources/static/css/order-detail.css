@@ -1,0 +1,198 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f5f7fb;
+    color: #333;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 40px auto;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 24px;
+    color: #1a1a1a;
+}
+
+.card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.info-item {
+    background: #f8f9fc;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.info-label {
+    font-size: 14px;
+    color: #777;
+    margin-bottom: 6px;
+}
+
+.info-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+}
+
+.status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-shipping {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-delivered {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-processing {
+    background: #ffe5b4;
+    color: #8a4b00;
+}
+
+.status-shipped {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.section-title {
+    font-size: 24px;
+    margin-bottom: 18px;
+    color: #1a1a1a;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #0d6efd;
+    color: white;
+}
+
+th, td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+tbody tr:hover {
+    background: #f9fbff;
+}
+
+.product-name {
+    font-weight: 600;
+    color: #222;
+}
+
+.summary-box {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.summary-card {
+    width: 320px;
+    background: #f8f9fc;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+.summary-row.total {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0d6efd;
+    border-top: 1px solid #ddd;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.btn-back {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 12px 18px;
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.2s;
+    font-weight: 600;
+}
+
+.btn-back:hover {
+    background: #5c636a;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 26px;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
+
+    th, td {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .summary-card {
+        width: 100%;
+    }
+}

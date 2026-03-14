@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Order Detail</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/order-detail.css}">
+</head>
+<body>
+<div class="container">
+    <h1 class="page-title">Chi tiết đơn hàng</h1>
+
+    <div class="card">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Mã đơn hàng</div>
+                <div class="info-value" th:text="${order.id}"></div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Ngày đặt</div>
+                <div class="info-value" th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Trạng thái</div>
+                <div class="info-value">
+                    <span class="status"
+                          th:text="${#strings.capitalize(order.status.name().toLowerCase())}"
+                          th:classappend="${
+                            order.status.name() == 'PENDING' ? ' status-pending' :
+                            order.status.name() == 'CONFIRMED' ? ' status-confirmed' :
+                            order.status.name() == 'PROCESSING' ? ' status-processing' :
+                            order.status.name() == 'SHIPPED' ? ' status-shipped' :
+                            order.status.name() == 'DELIVERED' ? ' status-delivered' :
+                            ' status-cancelled'
+                          }">
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Tổng tiền</div>
+                <div class="info-value"
+                     th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Địa chỉ giao hàng</h2>
+        <p>
+            <strong>Địa chỉ:</strong>
+            <span th:text="${order.shippingAddress}"></span>,
+            <span th:text="${order.shippingDistrict}"></span>,
+            <span th:text="${order.shippingCity}"></span>
+        </p>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title">Sản phẩm trong đơn</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tên sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${order.orderItems}">
+                    <td class="product-name" th:text="${item.product.name}"></td>
+                    <td th:text="${item.quantity}"></td>
+                    <td th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-box">
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span>Tạm tính</span>
+                    <span th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển</span>
+                    <span>0 đ</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng cộng</span>
+                    <span th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+                </div>
+            </div>
+        </div>
+
+        <a th:href="@{/orders}" class="btn-back">← Quay lại đơn hàng</a>
+    </div>
+</div>
+</body>
+</html>
