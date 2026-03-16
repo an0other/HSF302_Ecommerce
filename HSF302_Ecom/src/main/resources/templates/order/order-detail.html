@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Detail — Voltex</title>
+    <link rel="stylesheet" th:href="@{/css/indexstyle.css}" />
+    <link rel="stylesheet" th:href="@{/css/orders.css}" />
+</head>
+<body>
+
+<main class="orders-main">
+    <div class="orders-container">
+
+        <div class="orders-breadcrumb">
+            <a href="/static" class="breadcrumb-link">Home</a>
+            <span class="breadcrumb-sep">/</span>
+            <a th:href="@{/orders}" class="breadcrumb-link">My Orders</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current" th:text="'Order #' + ${order.id}">Order #1</span>
+        </div>
+
+        <div class="orders-title-row">
+            <div>
+                <h1 class="orders-title" th:text="'Order #' + ${order.id}">Order #1</h1>
+                <p class="orders-count">Order detail information</p>
+            </div>
+        </div>
+
+        <div class="order-detail-layout">
+            <section class="order-detail-summary">
+                <div class="detail-box">
+                    <h3 class="detail-title">Order Summary</h3>
+
+                    <div class="detail-row">
+                        <span>Status</span>
+                        <strong th:text="${order.status}">PENDING</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span>Created At</span>
+                        <strong th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">15/03/2026 10:30</strong>
+                    </div>
+
+                    <div class="detail-row">
+                        <span>Shipping Address</span>
+                        <strong>
+                            <span th:text="${order.shippingAddress}">123 Street</span>,
+                            <span th:text="${order.shippingDistrict}">District 1</span>,
+                            <span th:text="${order.shippingCity}">HCM</span>
+                        </strong>
+                    </div>
+
+                    <div class="detail-row detail-row-total">
+                        <span>Total Price</span>
+                        <strong th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
+                            1,000,000 ₫
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="order-detail-items">
+                <div class="detail-box">
+                    <h3 class="detail-title">Order Items</h3>
+
+                    <div class="order-items-table-wrap">
+                        <table class="order-items-table">
+                            <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>SubTotal</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${order.items}">
+                                <td th:text="${item.productName}">Product A</td>
+                                <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' ₫'">100,000 ₫</td>
+                                <td th:text="${item.quantity}">1</td>
+                                <td th:text="${#numbers.formatDecimal(item.subTotal, 0, 'COMMA', 0, 'POINT')} + ' ₫'">100,000 ₫</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <a th:href="@{/orders}" class="order-back-link">← Back to My Orders</a>
+                </div>
+            </section>
+        </div>
+
+    </div>
+</main>
+
+</body>
+</html>
