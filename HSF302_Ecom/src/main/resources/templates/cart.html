@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Cart — Voltex</title>
+    <link rel="stylesheet" th:href="@{/css/indexstyle.css}" />
+    <link rel="stylesheet" th:href="@{/css/cart.css}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+    <style>
+        .nav-user-wrap { position: relative; }
+        .nav-user-btn {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 14px 6px 8px;
+            background: var(--clr-surface-alt); border: 1.5px solid var(--clr-border);
+            border-radius: var(--radius-full); cursor: pointer;
+            font-family: var(--font-display); font-size: 13px; font-weight: 600;
+            color: var(--clr-text-primary); white-space: nowrap;
+            transition: border-color var(--duration-fast), background var(--duration-fast);
+        }
+        .nav-user-btn:hover { border-color: var(--clr-accent); background: var(--clr-accent-light); color: var(--clr-accent); }
+        .nav-user-avatar {
+            width: 26px; height: 26px; border-radius: 50%; background: var(--clr-accent);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display); font-size: 11px; font-weight: 800;
+            color: #fff; flex-shrink: 0; text-transform: uppercase;
+        }
+        .nav-user-chevron { color: var(--clr-text-muted); transition: transform var(--duration-normal) var(--ease-out); flex-shrink: 0; }
+        .nav-user-btn--open .nav-user-chevron { transform: rotate(180deg); }
+        .nav-user-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0; min-width: 200px;
+            background: var(--clr-surface); border: 1px solid var(--clr-border);
+            border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+            padding: 6px 0; z-index: 200; opacity: 0; pointer-events: none; transform: translateY(-8px);
+            transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+        }
+        .nav-user-dropdown--open { opacity: 1; pointer-events: all; transform: translateY(0); }
+        .nav-user-dropdown-header { padding: 10px 16px 8px; border-bottom: 1px solid var(--clr-border-light); margin-bottom: 4px; }
+        .nav-user-dropdown-name { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: var(--clr-text-primary); }
+        .nav-user-dropdown-email { font-size: 11.5px; color: var(--clr-text-muted); font-weight: 300; margin-top: 2px; }
+        .nav-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 13.5px; color: var(--clr-text-secondary); text-decoration: none; transition: background var(--duration-fast), color var(--duration-fast); }
+        .nav-dropdown-item:hover { background: var(--clr-surface-alt); color: var(--clr-text-primary); }
+        .nav-dropdown-item--danger:hover { background: #fff1f0; color: #c53030; }
+        .nav-dropdown-divider { height: 1px; background: var(--clr-border-light); margin: 4px 0; }
+    </style>
+</head>
+<body>
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════ -->
+<header class="navbar" id="navbar">
+    <div class="nav-top-row">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+
+            <div class="nav-search" id="navSearch">
+                <div class="search-cat-select" id="searchCatSelect">
+                    <button class="search-cat-btn" id="searchCatBtn" type="button">
+                        <span id="searchCatLabel">All</span>
+                        <svg class="search-cat-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <ul class="search-cat-dropdown" id="searchCatDropdown">
+                        <li class="search-cat-option search-cat-option--active" data-value="" data-label="All">All Categories</li>
+                        <li th:each="cat : ${categories}" class="search-cat-option"
+                            th:data-value="${cat.id}" th:data-label="${cat.name}" th:text="${cat.name}"></li>
+                    </ul>
+                </div>
+                <div class="search-sep"></div>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search products, brands…" autocomplete="off" />
+                <button class="search-btn" id="searchSubmit" aria-label="Search">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+            </div>
+
+            <div class="nav-actions">
+                <th:block th:if="${session.loggedInUser == null}">
+                    <a href="/login"    class="nav-action-link">Sign In</a>
+                    <span class="nav-action-sep">|</span>
+                    <a href="/register" class="nav-action-link">Register</a>
+                </th:block>
+                <th:block th:if="${session.loggedInUser != null}">
+                    <div class="nav-user-wrap" id="navUserWrap">
+                        <button class="nav-user-btn" id="navUserBtn" type="button" aria-haspopup="true" aria-expanded="false">
+                            <div class="nav-user-avatar" th:text="${#strings.substring(session.loggedInUser.username,0,1)}">U</div>
+                            <span th:text="'Hello, ' + ${session.loggedInUser.username}">Hello, user</span>
+                            <svg class="nav-user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="nav-user-dropdown" id="navUserDropdown">
+                            <div class="nav-user-dropdown-header">
+                                <div class="nav-user-dropdown-name" th:text="${session.loggedInUser.username}">username</div>
+                                <div class="nav-user-dropdown-email" th:text="${session.loggedInUser.email}">email</div>
+                            </div>
+                            <a href="/orders"  class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> My Orders</a>
+                            <a href="/profile" class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> My Profile</a>
+                            <div class="nav-dropdown-divider"></div>
+                            <a href="/logout"  class="nav-dropdown-item nav-dropdown-item--danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</a>
+                        </div>
+                    </div>
+                </th:block>
+                <a href="/cart" class="nav-cart-btn" aria-label="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span class="nav-cart-count" id="navCartCount" th:text="${itemCount > 0 ? itemCount : '0'}">0</span>
+                </a>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </div>
+
+    <nav class="nav-cat-strip">
+        <div class="nav-cat-inner">
+            <a href="/products" class="nav-cat-link nav-cat-link--all">All</a>
+            <a th:each="cat : ${categories}"
+               th:href="@{/products(categoryId=${cat.id})}"
+               th:text="${cat.name}"
+               class="nav-cat-link"></a>
+        </div>
+    </nav>
+
+    <div class="mobile-nav" id="mobileNav">
+        <a href="/products" class="mobile-nav-link">All Products</a>
+        <a th:each="cat : ${categories}" th:href="@{/products(categoryId=${cat.id})}" th:text="${cat.name}" class="mobile-nav-link"></a>
+        <div class="mobile-nav-divider"></div>
+        <th:block th:if="${session.loggedInUser == null}">
+            <a href="/login"    class="mobile-nav-link">Sign In</a>
+            <a href="/register" class="mobile-nav-link">Register</a>
+        </th:block>
+        <th:block th:if="${session.loggedInUser != null}">
+            <a href="/orders"  class="mobile-nav-link" th:text="'Hello, ' + ${session.loggedInUser.username}">Hello</a>
+            <a href="/orders"  class="mobile-nav-link">My Orders</a>
+            <a href="/profile" class="mobile-nav-link">My Profile</a>
+            <a href="/logout"  class="mobile-nav-link">Sign Out</a>
+        </th:block>
+        <a href="/cart" class="mobile-nav-link">Cart (<span th:text="${itemCount}">0</span>)</a>
+    </div>
+</header>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════════ -->
+<main class="cart-main">
+    <div class="cart-container">
+
+        <!-- Breadcrumb -->
+        <nav class="cart-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span class="cart-breadcrumb-sep">/</span>
+            <span class="cart-breadcrumb-curr">My Cart</span>
+        </nav>
+
+        <!-- Page title -->
+        <div class="cart-title-row">
+            <h1 class="cart-page-title">Shopping Cart</h1>
+        </div>
+
+        <!-- ══ GUEST: not logged in ══ -->
+        <th:block th:if="${isGuest}">
+            <div class="cart-guest-notice">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--clr-text-muted)"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <h2 class="cart-empty-title">Sign in to view your cart</h2>
+                <p class="cart-empty-sub">Create an account or sign in to save items and proceed to checkout.</p>
+                <div class="cart-guest-actions">
+                    <a href="/login"    class="cart-empty-cta">Sign In</a>
+                    <a href="/register" class="btn-continue-shopping" style="display:inline-flex;align-items:center;gap:8px;">Create Account</a>
+                </div>
+            </div>
+        </th:block>
+
+        <!-- ══ LOGGED IN: empty cart ══ -->
+        <th:block th:if="${!isGuest and #lists.isEmpty(cartItems)}">
+            <div class="cart-empty">
+                <div class="cart-empty-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </div>
+                <h2 class="cart-empty-title">Your cart is empty</h2>
+                <p class="cart-empty-sub">Looks like you haven't added anything yet. Explore our store and find something you love!</p>
+                <a href="/products" class="cart-empty-cta">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    Start Shopping
+                </a>
+            </div>
+        </th:block>
+
+        <!-- ══ LOGGED IN: has items ══ -->
+        <th:block th:if="${!isGuest and !#lists.isEmpty(cartItems)}">
+            <div class="cart-layout">
+
+                <!-- LEFT: items list -->
+                <div class="cart-items-panel" id="cartItemsPanel">
+
+                    <!-- Column headers (desktop only) -->
+                    <div class="cart-items-header">
+                        <div class="cart-col-label">Product</div>
+                        <div class="cart-col-label cart-col-label--center">Quantity</div>
+                        <div class="cart-col-label cart-col-label--right">Subtotal</div>
+                        <div></div>
+                    </div>
+
+                    <!-- Items -->
+                    <div th:each="item : ${cartItems}"
+                         class="cart-item"
+                         th:id="'cart-item-' + ${item.cartItemId}"
+                         th:data-cart-item-id="${item.cartItemId}"
+                         th:data-stock="${item.availableStock}">
+
+                        <!-- Product info -->
+                        <div class="cart-item-info">
+                            <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-img-wrap">
+                                <img th:src="${item.imageUrl != null ? item.imageUrl : '/img/image1.webp'}"
+                                     th:alt="${item.productName}"
+                                     class="cart-item-img" />
+                            </a>
+                            <div class="cart-item-meta">
+                                <span class="cart-item-brand" th:text="${item.brandName}">Brand</span>
+                                <a th:href="@{/products/{id}(id=${item.productId})}"
+                                   class="cart-item-name"
+                                   th:text="${item.productName}"
+                                   style="text-decoration:none;color:inherit;transition:color var(--duration-fast);"
+                                   onmouseover="this.style.color='var(--clr-accent)'"
+                                   onmouseout="this.style.color='inherit'">Product Name</a>
+                                <span class="cart-item-variant"
+                                      th:text="${item.color} + ' · ' + ${item.spec}">Color · Spec</span>
+                                <span class="cart-item-unit-price" th:text="${item.priceFormatted}">0 ₫</span>
+                            </div>
+                        </div>
+
+                        <!-- Quantity control -->
+                        <div class="cart-item-qty">
+                            <div class="qty-ctrl">
+                                <button class="qty-btn qty-btn-minus"
+                                        th:disabled="${item.quantity <= 1}"
+                                        th:data-item-id="${item.cartItemId}"
+                                        onclick="changeQty(this, -1)"
+                                        aria-label="Decrease quantity">&#8722;</button>
+                                <span class="qty-val" th:text="${item.quantity}">1</span>
+                                <button class="qty-btn qty-btn-plus"
+                                        th:disabled="${item.availableStock <= 0}"
+                                        th:data-item-id="${item.cartItemId}"
+                                        onclick="changeQty(this, +1)"
+                                        aria-label="Increase quantity">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Subtotal -->
+                        <div class="cart-item-subtotal"
+                             th:id="'sub-' + ${item.cartItemId}"
+                             th:text="${item.subTotalFormatted}">0 ₫</div>
+
+                        <!-- Remove -->
+                        <div class="cart-item-remove">
+                            <button class="btn-remove"
+                                    th:data-item-id="${item.cartItemId}"
+                                    onclick="removeItem(this)"
+                                    aria-label="Remove item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Clear cart -->
+                    <div class="cart-actions-bar">
+                        <form th:action="@{/cart/clear}" method="post">
+                            <button type="submit" class="btn-clear-cart">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                Clear Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- RIGHT: order summary -->
+                <div class="cart-summary">
+                    <div class="cart-summary-header">Order Summary</div>
+
+                    <div class="cart-summary-body">
+                        <div class="cart-summary-row cart-summary-row--total">
+                            <span class="cart-summary-label">Total</span>
+                            <span class="cart-summary-amount" id="summaryTotal"
+                                  th:text="${#numbers.formatDecimal(cartTotal, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                        </div>
+                    </div>
+
+                    <div class="cart-summary-footer">
+                        <a href="/checkout" class="btn-checkout" id="checkoutBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                            Proceed to Checkout
+                        </a>
+                        <a href="/products" class="btn-continue-shopping">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            Continue Shopping
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </th:block>
+
+    </div><!-- /cart-container -->
+</main>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div class="footer-col footer-col--brand">
+                <a href="/" class="footer-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+                <p class="footer-about">Voltex is your destination for premium electronics.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+                    <a href="#" class="social-link" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Customer Support</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Track Your Order</a></li>
+                    <li><a href="#" class="footer-link">Returns &amp; Exchanges</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Company</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">About Voltex</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Contact Us</h4>
+                <div class="footer-contact">
+                    <div class="contact-item"><strong>Phone</strong><span>+84 (0)28 1234 5678</span></div>
+                    <div class="contact-item"><strong>Email</strong><span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a0d3d5d0d0cfd2d4e0d6cfccd4c5d88ed6ce">[email&#160;protected]</a></span></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span class="footer-copy">&copy; 2025 Voltex Electronics. All rights reserved.</span>
+            <div class="footer-pay">
+                <span class="pay-label">We accept:</span>
+                <span class="pay-chip">Visa</span><span class="pay-chip">Mastercard</span>
+                <span class="pay-chip">VNPay</span><span class="pay-chip">COD</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Toast container -->
+<div id="toastContainer" style="position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:12px;pointer-events:none;max-width:360px;"></div>
+
+<th:block th:if="${toast != null}">
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script th:inline="javascript">
+    window.__voltexToast     = /*[[${toast}]]*/ '';
+    window.__voltexToastType = /*[[${toastType}]]*/ 'info';
+</script>
+</th:block>
+
+<script>
+    /* ══ Navbar ══════════════════════════════════════════════════ */
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => navbar.classList.toggle('navbar--scrolled', window.scrollY > 10), { passive: true });
+
+    document.getElementById('mobileMenuBtn').addEventListener('click', function () {
+        document.getElementById('mobileNav').classList.toggle('mobile-nav--open');
+        this.classList.toggle('mobile-menu-btn--open');
+    });
+
+    const searchCatBtn      = document.getElementById('searchCatBtn');
+    const searchCatDropdown = document.getElementById('searchCatDropdown');
+    const searchCatLabel    = document.getElementById('searchCatLabel');
+
+    searchCatBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        searchCatDropdown.classList.toggle('search-cat-dropdown--open');
+        searchCatBtn.classList.toggle('search-cat-btn--open');
+    });
+    searchCatDropdown.querySelectorAll('.search-cat-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const label = opt.dataset.label || opt.textContent.trim();
+            searchCatLabel.textContent = label === 'All Categories' ? 'All' : label;
+            searchCatDropdown.querySelectorAll('.search-cat-option').forEach(o => o.classList.remove('search-cat-option--active'));
+            opt.classList.add('search-cat-option--active');
+            searchCatDropdown.classList.remove('search-cat-dropdown--open');
+            searchCatBtn.classList.remove('search-cat-btn--open');
+        });
+    });
+    document.getElementById('searchSubmit').addEventListener('click', () => {
+        const kw  = document.getElementById('searchInput').value.trim();
+        const cat = searchCatDropdown.querySelector('.search-cat-option--active')?.dataset.value || '';
+        const url = new URL('/products', location.origin);
+        if (cat) url.searchParams.set('categoryId', cat);
+        if (kw)  url.searchParams.set('keyword', kw);
+        location.href = url.toString();
+    });
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('searchSubmit').click();
+    });
+
+    const navUserBtn      = document.getElementById('navUserBtn');
+    const navUserDropdown = document.getElementById('navUserDropdown');
+    if (navUserBtn) {
+        navUserBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const open = navUserDropdown.classList.toggle('nav-user-dropdown--open');
+            navUserBtn.classList.toggle('nav-user-btn--open', open);
+            navUserBtn.setAttribute('aria-expanded', open);
+        });
+    }
+    document.addEventListener('click', () => {
+        searchCatDropdown.classList.remove('search-cat-dropdown--open');
+        searchCatBtn.classList.remove('search-cat-btn--open');
+        if (navUserBtn) {
+            navUserDropdown?.classList.remove('nav-user-dropdown--open');
+            navUserBtn.classList.remove('nav-user-btn--open');
+            navUserBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    /* ══ Cart interactions ══════════════════════════════════════ */
+
+    function updateNavCartBadge(count) {
+        const badge = document.getElementById('navCartCount');
+        if (badge) badge.textContent = count;
+    }
+
+    function updateSummaryTotal(total) {
+        document.getElementById('summaryTotal').textContent = total;
+    }
+
+    async function changeQty(btn, delta) {
+        const row     = btn.closest('.cart-item');
+        const itemId  = row.dataset.cartItemId;
+        // data-stock = availableStock = extra units that can still be added to this item
+        const stock   = parseInt(row.dataset.stock, 10);
+        const valEl   = row.querySelector('.qty-val');
+        const current = parseInt(valEl.textContent, 10);
+        const newQty  = current + delta;
+
+        // Block decrease below 1, block increase when no additional stock left
+        if (newQty < 1) return;
+        if (delta > 0 && stock <= 0) return;
+
+        // Optimistic UI update
+        valEl.textContent = newQty;
+        row.querySelector('.qty-btn-minus').disabled = (newQty <= 1);
+        // After increasing by 1, available drops by 1; disable plus if nothing left
+        row.querySelector('.qty-btn-plus').disabled  = (delta > 0 && stock - 1 <= 0)
+            || (delta < 0 ? false : stock <= 0);
+
+        try {
+            const res  = await fetch('/cart/update', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body:    `cartItemId=${itemId}&qty=${newQty}`
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Server returns the updated availableStock so we stay in sync
+                if (data.availableStock !== undefined) {
+                    row.dataset.stock = data.availableStock;
+                    row.querySelector('.qty-btn-plus').disabled = (data.availableStock <= 0);
+                }
+                document.getElementById('sub-' + itemId).textContent = data.itemSubTotal;
+                updateSummaryTotal(data.cartTotal);
+                updateNavCartBadge(data.cartCount);
+            } else {
+                // Rollback optimistic update
+                valEl.textContent = current;
+                row.querySelector('.qty-btn-minus').disabled = (current <= 1);
+                row.querySelector('.qty-btn-plus').disabled  = (stock <= 0);
+                showToast(data.message || 'Failed to update quantity.', 'error');
+            }
+        } catch (e) {
+            valEl.textContent = current;
+            row.querySelector('.qty-btn-plus').disabled = (stock <= 0);
+            showToast('Network error. Please try again.', 'error');
+        }
+    }
+
+    async function removeItem(btn) {
+        const row    = btn.closest('.cart-item');
+        const itemId = row.dataset.cartItemId;
+
+        // Animate out
+        row.classList.add('cart-item--removing');
+
+        try {
+            const res  = await fetch('/cart/remove', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body:    `cartItemId=${itemId}`
+            });
+            const data = await res.json();
+            if (data.success) {
+                setTimeout(() => row.remove(), 320);
+                updateSummaryTotal(data.cartTotal);
+                updateNavCartBadge(data.cartCount);
+                if (data.isEmpty) {
+                    setTimeout(() => location.reload(), 400);
+                }
+                showToast('Item removed from cart.', 'info');
+            } else {
+                row.classList.remove('cart-item--removing');
+                showToast(data.message || 'Failed to remove item.', 'error');
+            }
+        } catch (e) {
+            row.classList.remove('cart-item--removing');
+            showToast('Network error. Please try again.', 'error');
+        }
+    }
+
+
+
+    /* ══ Toast system ════════════════════════════════════════════ */
+    (function () {
+        const ICONS = {
+            success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+            error:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+            info:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+            warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+        };
+        const PALETTE = {
+            success: { bg:'#f0fdf4', border:'#bbf7d0', icon:'#16a34a', text:'#14532d', bar:'#16a34a' },
+            error:   { bg:'#fff1f0', border:'#ffd7d5', icon:'#dc2626', text:'#7f1d1d', bar:'#dc2626' },
+            info:    { bg:'#fff0ec', border:'rgba(232,68,26,.25)', icon:'#e8441a', text:'#7c2d12', bar:'#e8441a' },
+            warning: { bg:'#fffbeb', border:'#fde68a', icon:'#d97706', text:'#78350f', bar:'#d97706' }
+        };
+        window.showToast = function(msg, type, duration) {
+            type = PALETTE[type] ? type : 'info';
+            duration = duration || 4000;
+            const c = PALETTE[type];
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const barId = 'vBar' + Date.now();
+            toast.style.cssText = `display:flex;align-items:flex-start;gap:12px;padding:14px 16px 10px;background:${c.bg};border:1.5px solid ${c.border};border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.13);font-family:var(--font-body,system-ui);font-size:14px;line-height:1.5;color:${c.text};pointer-events:all;cursor:pointer;max-width:360px;width:360px;opacity:0;transform:translateY(16px) scale(.97);transition:opacity 280ms ease,transform 280ms ease;position:relative;overflow:hidden`;
+            toast.innerHTML = `<span style="color:${c.icon};flex-shrink:0;margin-top:1px">${ICONS[type]}</span><span style="flex:1">${msg}</span><button style="background:none;border:none;cursor:pointer;color:${c.icon};opacity:.55;padding:0;flex-shrink:0;font-size:16px">&#x2715;</button><div id="${barId}" style="position:absolute;bottom:0;left:0;height:3px;width:100%;background:${c.bar};opacity:.3;transition:width ${duration}ms linear"></div>`;
+            container.appendChild(toast);
+            let tid;
+            const dismiss = () => {
+                clearTimeout(tid);
+                toast.style.opacity = '0'; toast.style.transform = 'translateY(8px) scale(.97)';
+                setTimeout(() => toast.parentNode && toast.parentNode.removeChild(toast), 300);
+            };
+            toast.querySelector('button').addEventListener('click', e => { e.stopPropagation(); dismiss(); });
+            toast.addEventListener('click', dismiss);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                toast.style.opacity = '1'; toast.style.transform = 'translateY(0) scale(1)';
+                const bar = document.getElementById(barId);
+                if (bar) requestAnimationFrame(() => bar.style.width = '0');
+            }));
+            tid = setTimeout(dismiss, duration);
+        };
+    })();
+
+    /* ══ Show server-side toast if present ══════════════════════ */
+    if (window.__voltexToast) {
+        window.addEventListener('DOMContentLoaded', () =>
+            window.showToast(window.__voltexToast, window.__voltexToastType || 'info'));
+    }
+</script>
+
+</body>
+</html>

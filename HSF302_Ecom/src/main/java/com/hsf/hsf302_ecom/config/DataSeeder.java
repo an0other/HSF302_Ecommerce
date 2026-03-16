@@ -272,7 +272,7 @@ public class DataSeeder implements CommandLineRunner {
         List<Inventories> allInventories = new ArrayList<>();
         for (ProductVariants v : allVariants) {
             allInventories.add(Inventories.builder()
-                    .stock(50L + (long)(Math.random() * 150))
+                    .stock(3L /*+ (long)(Math.random() * 150)*/)
                     .reserved(0L)
                     .productVariant(v)
                     .build());

@@ -188,7 +188,7 @@
 
                 <a href="/cart" class="nav-cart-btn" aria-label="Cart">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                    <span class="nav-cart-count">0</span>
+                    <span class="nav-cart-count" id="navCartCount">0</span>
                 </a>
             </div>
 
@@ -489,12 +489,25 @@
     });
 
     /* ── Add to cart feedback ── */
+    /* ── Add to cart (real AJAX) ── */
     document.querySelectorAll('.btn-cart').forEach(btn => {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', async function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const productId = this.dataset.productId;
+            if (!productId) return;
+
             const orig = this.textContent;
-            this.textContent = 'Added!';
-            this.classList.add('btn-cart--added');
-            setTimeout(() => { this.textContent = orig; this.classList.remove('btn-cart--added'); }, 1500);
+            this.disabled = true;
+            this.textContent = '...';
+
+            try {
+
+                window.location.href = '/products/' + productId;
+            } catch (err) {
+                this.textContent = orig;
+                this.disabled = false;
+            }
         });
     });
 
@@ -682,6 +695,24 @@
                 showToast(window.__voltexToast, window.__voltexToastType || 'success');
             }, 200);
         }
+    })();
+</script>
+<!-- ── Cart badge auto-refresh ───────────────────────────────
+     Drop this snippet just before </body> in:
+       - index.html
+       - products.html
+       - product-detail.html
+     (cart.html already updates the badge live via JS)
+─────────────────────────────────────────────────────────── -->
+<script>
+    (function () {
+        fetch('/cart/count')
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                var badge = document.getElementById('navCartCount');
+                if (badge && d.count !== undefined) badge.textContent = d.count;
+            })
+            .catch(function(){});
     })();
 </script>
 </body>
