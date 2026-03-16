@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile</title>
+    <link rel="stylesheet" th:href="@{/css/user-profile.css}" />
+</head>
+<body>
+<div class="profile-box">
+
+    <div class="breadcrumb">
+        <a href="/">Home</a>
+        <span>/</span>
+        <span>My Profile</span>
+    </div>
+
+    <p class="toast" th:if="${toast}" th:text="${toast}"></p>
+
+    <div class="profile-row">
+        <div class="profile-label">Username</div>
+        <div class="profile-value" th:text="${profile.username}"></div>
+    </div>
+
+    <div class="profile-row">
+        <div class="profile-label">Email</div>
+        <div class="profile-value" th:text="${profile.email}"></div>
+    </div>
+
+    <div class="profile-row">
+        <div class="profile-label">Phone</div>
+        <div class="profile-value" th:text="${profile.phone}"></div>
+    </div>
+
+    <div class="profile-row">
+        <div class="profile-label">Password</div>
+        <div class="profile-value">********</div>
+        <div class="password-action">
+            <button type="button" class="btn btn-primary" onclick="togglePasswordForm()">
+                Update Password
+            </button>
+        </div>
+    </div>
+
+    <div class="password-form" id="passwordForm"
+         th:style="${showPasswordForm} ? 'display:block;' : 'display:none;'">
+        <h3>Change Password</h3>
+
+        <form th:action="@{/profile/change-password}" th:object="${changePassRequest}" method="post">
+            <div class="form-group">
+                <label>Old Password</label>
+                <input type="password" th:field="*{oldPassword}">
+                <p class="error-text" th:if="${#fields.hasErrors('oldPassword')}" th:errors="*{oldPassword}"></p>
+            </div>
+
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" th:field="*{newPassword}">
+                <p class="error-text" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></p>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" th:field="*{confirmPassword}">
+                <p class="error-text" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save New Password</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePasswordForm() {
+        const form = document.getElementById("passwordForm");
+        if (form.style.display === "none" || form.style.display === "") {
+            form.style.display = "block";
+        } else {
+            form.style.display = "none";
+        }
+    }
+</script>
+</body>
+</html>
