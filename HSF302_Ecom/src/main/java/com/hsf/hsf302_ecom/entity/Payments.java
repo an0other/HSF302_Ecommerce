@@ -30,16 +30,11 @@ public class Payments {
     @Column(nullable = false)
     private BigDecimal amount;
 
-    @Column(nullable = false)
+    @Column
     private String transactionId;
 
-    @Column(nullable = false)
+    @Column
     private LocalDateTime paidAt;
-
-    @PrePersist
-    public void prePersist() {
-        paidAt = LocalDateTime.now();
-    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
