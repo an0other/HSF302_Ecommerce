@@ -22,4 +22,6 @@ public class OrderDetailDTO {
     private BigDecimal totalPrice;
     private LocalDateTime createdAt;
     private List<OrderItemDTO> items;
+    private String paymentMethod;
+    private boolean paymentPaid;
 }
