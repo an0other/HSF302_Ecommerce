@@ -1,83 +1,316 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>My Profile</title>
-    <link rel="stylesheet" th:href="@{/css/user-profile.css}" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile — Voltex</title>
+    <link rel="stylesheet" th:href="@{/css/indexstyle.css}" />
+    <link rel="stylesheet" th:href="@{/css/orders.css}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+    <style>
+        .nav-user-wrap { position: relative; }
+        .nav-user-btn { display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;background:var(--clr-surface-alt);border:1.5px solid var(--clr-border);border-radius:var(--radius-full);cursor:pointer;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--clr-text-primary);white-space:nowrap;transition:border-color var(--duration-fast),background var(--duration-fast); }
+        .nav-user-btn:hover { border-color:var(--clr-accent);background:var(--clr-accent-light);color:var(--clr-accent); }
+        .nav-user-avatar { width:26px;height:26px;border-radius:50%;background:var(--clr-accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:11px;font-weight:800;color:#fff;flex-shrink:0;text-transform:uppercase; }
+        .nav-user-chevron { color:var(--clr-text-muted);transition:transform var(--duration-normal) var(--ease-out);flex-shrink:0; }
+        .nav-user-btn--open .nav-user-chevron { transform:rotate(180deg); }
+        .nav-user-dropdown { position:absolute;top:calc(100% + 10px);right:0;min-width:200px;background:var(--clr-surface);border:1px solid var(--clr-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:6px 0;z-index:200;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity var(--duration-normal) var(--ease-out),transform var(--duration-normal) var(--ease-out); }
+        .nav-user-dropdown--open { opacity:1;pointer-events:all;transform:translateY(0); }
+        .nav-user-dropdown-header { padding:10px 16px 8px;border-bottom:1px solid var(--clr-border-light);margin-bottom:4px; }
+        .nav-user-dropdown-name { font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--clr-text-primary); }
+        .nav-user-dropdown-email { font-size:11.5px;color:var(--clr-text-muted);font-weight:300;margin-top:2px; }
+        .nav-dropdown-item { display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13.5px;color:var(--clr-text-secondary);text-decoration:none;transition:background var(--duration-fast),color var(--duration-fast); }
+        .nav-dropdown-item:hover { background:var(--clr-surface-alt);color:var(--clr-text-primary); }
+        .nav-dropdown-item--danger:hover { background:#fff1f0;color:#c53030; }
+        .nav-dropdown-divider { height:1px;background:var(--clr-border-light);margin:4px 0; }
+    </style>
 </head>
 <body>
-<div class="profile-box">
 
-    <div class="breadcrumb">
-        <a href="/">Home</a>
-        <span>/</span>
-        <span>My Profile</span>
-    </div>
-
-    <p class="toast" th:if="${toast}" th:text="${toast}"></p>
-
-    <div class="profile-row">
-        <div class="profile-label">Username</div>
-        <div class="profile-value" th:text="${profile.username}"></div>
-    </div>
-
-    <div class="profile-row">
-        <div class="profile-label">Email</div>
-        <div class="profile-value" th:text="${profile.email}"></div>
-    </div>
-
-    <div class="profile-row">
-        <div class="profile-label">Phone</div>
-        <div class="profile-value" th:text="${profile.phone}"></div>
-    </div>
-
-    <div class="profile-row">
-        <div class="profile-label">Password</div>
-        <div class="profile-value">********</div>
-        <div class="password-action">
-            <button type="button" class="btn btn-primary" onclick="togglePasswordForm()">
-                Update Password
-            </button>
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════ -->
+<header class="navbar" id="navbar">
+    <div class="nav-top-row">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+            <div class="nav-search" id="navSearch">
+                <div class="search-cat-select">
+                    <button class="search-cat-btn" id="searchCatBtn" type="button">
+                        <span id="searchCatLabel">All</span>
+                        <svg class="search-cat-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </div>
+                <div class="search-sep"></div>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search products, brands…" autocomplete="off" />
+                <button class="search-btn" id="searchSubmit" aria-label="Search">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+            </div>
+            <div class="nav-actions">
+                <div class="nav-user-wrap" id="navUserWrap">
+                    <button class="nav-user-btn" id="navUserBtn" type="button" aria-haspopup="true" aria-expanded="false">
+                        <div class="nav-user-avatar" th:text="${#strings.substring(session.loggedInUser.username,0,1)}">U</div>
+                        <span th:text="'Hello, ' + ${session.loggedInUser.username}">Hello, user</span>
+                        <svg class="nav-user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="nav-user-dropdown" id="navUserDropdown">
+                        <div class="nav-user-dropdown-header">
+                            <div class="nav-user-dropdown-name" th:text="${session.loggedInUser.username}">username</div>
+                            <div class="nav-user-dropdown-email" th:text="${session.loggedInUser.email}">email</div>
+                        </div>
+                        <a href="/orders"  class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> My Orders</a>
+                        <a href="/profile" class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> My Profile</a>
+                        <div class="nav-dropdown-divider"></div>
+                        <a href="/logout"  class="nav-dropdown-item nav-dropdown-item--danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</a>
+                    </div>
+                </div>
+                <a href="/cart" class="nav-cart-btn" aria-label="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span class="nav-cart-count" id="navCartCount">0</span>
+                </a>
+            </div>
         </div>
     </div>
+    <nav class="nav-cat-strip">
+        <div class="nav-cat-inner">
+            <a href="/products" class="nav-cat-link nav-cat-link--all">All</a>
+        </div>
+    </nav>
+</header>
 
-    <div class="password-form" id="passwordForm"
-         th:style="${showPasswordForm} ? 'display:block;' : 'display:none;'">
-        <h3>Change Password</h3>
+<!-- ═══ MAIN ══════════════════════════════════════════════════ -->
+<main class="profile-main">
+    <div class="profile-container">
 
-        <form th:action="@{/profile/change-password}" th:object="${changePassRequest}" method="post">
-            <div class="form-group">
-                <label>Old Password</label>
-                <input type="password" th:field="*{oldPassword}">
-                <p class="error-text" th:if="${#fields.hasErrors('oldPassword')}" th:errors="*{oldPassword}"></p>
+        <!-- Breadcrumb -->
+        <nav class="orders-breadcrumb" aria-label="Breadcrumb">
+            <a href="/" class="breadcrumb-link">Home</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">My Profile</span>
+        </nav>
+
+        <!-- Title -->
+        <div class="profile-title-row">
+            <h1 class="profile-title">My Profile</h1>
+            <p class="profile-subtitle">Manage your account information and security settings.</p>
+        </div>
+
+        <!-- Toast -->
+        <div th:if="${toast}" class="profile-toast"
+             th:classappend="${toastType == 'success'} ? 'profile-toast--success' : 'profile-toast--error'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 th:if="${toastType == 'success'}"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 th:unless="${toastType == 'success'}"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span th:text="${toast}"></span>
+        </div>
+
+        <!-- Account info card -->
+        <div class="profile-card">
+            <div class="profile-card-header">
+                <svg class="profile-card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span class="profile-card-title">Account Information</span>
             </div>
-
-            <div class="form-group">
-                <label>New Password</label>
-                <input type="password" th:field="*{newPassword}">
-                <p class="error-text" th:if="${#fields.hasErrors('newPassword')}" th:errors="*{newPassword}"></p>
+            <div class="profile-card-body">
+                <div class="profile-row">
+                    <span class="profile-label">Username</span>
+                    <span class="profile-value" th:text="${profile.username}">username</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Email</span>
+                    <span class="profile-value" th:text="${profile.email}">email@example.com</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Phone</span>
+                    <span class="profile-value" th:text="${profile.phone}">0900000000</span>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Password</span>
+                    <span class="profile-value profile-value--muted">••••••••</span>
+                    <button type="button" class="profile-change-btn" id="togglePwFormBtn" onclick="togglePasswordForm()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Change Password
+                    </button>
+                </div>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label>Confirm Password</label>
-                <input type="password" th:field="*{confirmPassword}">
-                <p class="error-text" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></p>
+        <!-- Password form card (hidden by default, revealed when toggled) -->
+        <div class="password-form-card"
+             id="passwordFormCard"
+             th:style="${showPasswordForm} ? 'display:block' : 'display:none'">
+            <div class="profile-card-header">
+                <svg class="profile-card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span class="profile-card-title">Change Password</span>
             </div>
+            <div class="password-form-body">
+                <form th:action="@{/profile/change-password}" th:object="${changePassRequest}" method="post">
 
-            <button type="submit" class="btn btn-primary">Save New Password</button>
-        </form>
+                    <div class="pw-form-field">
+                        <label class="pw-label" for="oldPassword">Current Password</label>
+                        <div class="pw-input-wrap">
+                            <input type="password" id="oldPassword" th:field="*{oldPassword}"
+                                   th:classappend="${#fields.hasErrors('oldPassword')} ? ' pw-input--error'"
+                                   class="pw-input" placeholder="Enter your current password" />
+                            <button type="button" class="pw-toggle" onclick="togglePw('oldPassword')" aria-label="Toggle">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <span class="pw-field-error" th:if="${#fields.hasErrors('oldPassword')}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span th:errors="*{oldPassword}"></span>
+                        </span>
+                    </div>
+
+                    <div class="pw-form-field">
+                        <label class="pw-label" for="newPassword">New Password</label>
+                        <div class="pw-input-wrap">
+                            <input type="password" id="newPassword" th:field="*{newPassword}"
+                                   th:classappend="${#fields.hasErrors('newPassword')} ? ' pw-input--error'"
+                                   class="pw-input" placeholder="Min. 6 characters" />
+                            <button type="button" class="pw-toggle" onclick="togglePw('newPassword')" aria-label="Toggle">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <span class="pw-field-error" th:if="${#fields.hasErrors('newPassword')}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span th:errors="*{newPassword}"></span>
+                        </span>
+                    </div>
+
+                    <div class="pw-form-field">
+                        <label class="pw-label" for="confirmPassword">Confirm New Password</label>
+                        <div class="pw-input-wrap">
+                            <input type="password" id="confirmPassword" th:field="*{confirmPassword}"
+                                   th:classappend="${#fields.hasErrors('confirmPassword')} ? ' pw-input--error'"
+                                   class="pw-input" placeholder="Re-enter new password" />
+                            <button type="button" class="pw-toggle" onclick="togglePw('confirmPassword')" aria-label="Toggle">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <span class="pw-field-error" th:if="${#fields.hasErrors('confirmPassword')}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span th:errors="*{confirmPassword}"></span>
+                        </span>
+                    </div>
+
+                    <div class="pw-form-actions">
+                        <button type="submit" class="pw-save-btn">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Save New Password
+                        </button>
+                        <button type="button" class="pw-cancel-btn" onclick="togglePasswordForm()">
+                            Cancel
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick links card -->
+        <div class="profile-card">
+            <div class="profile-card-header">
+                <svg class="profile-card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span class="profile-card-title">Quick Links</span>
+            </div>
+            <div class="profile-card-body" style="padding: var(--space-3) 0;">
+                <div class="profile-row">
+                    <span class="profile-label">Orders</span>
+                    <span class="profile-value">View and track all your purchases</span>
+                    <a href="/orders" class="profile-change-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        My Orders
+                    </a>
+                </div>
+                <div class="profile-row">
+                    <span class="profile-label">Shop</span>
+                    <span class="profile-value">Continue browsing products</span>
+                    <a href="/products" class="profile-change-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        Browse Products
+                    </a>
+                </div>
+            </div>
+        </div>
+
     </div>
-</div>
+</main>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div class="footer-col footer-col--brand">
+                <a href="/" class="footer-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+                <p class="footer-about">Voltex is your destination for premium electronics.</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Customer Support</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Track Your Order</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Company</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">About Voltex</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span class="footer-copy">&copy; 2025 Voltex Electronics. All rights reserved.</span>
+        </div>
+    </div>
+</footer>
 
 <script>
-    function togglePasswordForm() {
-        const form = document.getElementById("passwordForm");
-        if (form.style.display === "none" || form.style.display === "") {
-            form.style.display = "block";
-        } else {
-            form.style.display = "none";
-        }
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => navbar.classList.toggle('navbar--scrolled', window.scrollY > 10), { passive: true });
+
+    const navUserBtn = document.getElementById('navUserBtn');
+    const navUserDropdown = document.getElementById('navUserDropdown');
+    if (navUserBtn) {
+        navUserBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const open = navUserDropdown.classList.toggle('nav-user-dropdown--open');
+            navUserBtn.classList.toggle('nav-user-btn--open', open);
+            navUserBtn.setAttribute('aria-expanded', open);
+        });
     }
+    document.addEventListener('click', () => {
+        navUserDropdown?.classList.remove('nav-user-dropdown--open');
+        navUserBtn?.classList.remove('nav-user-btn--open');
+        navUserBtn?.setAttribute('aria-expanded', 'false');
+    });
+
+    document.getElementById('searchSubmit').addEventListener('click', () => {
+        const kw = document.getElementById('searchInput').value.trim();
+        location.href = kw ? '/products?keyword=' + encodeURIComponent(kw) : '/products';
+    });
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('searchSubmit').click();
+    });
+
+    function togglePasswordForm() {
+        const card = document.getElementById('passwordFormCard');
+        const isHidden = card.style.display === 'none' || card.style.display === '';
+        card.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function togglePw(inputId) {
+        const input = document.getElementById(inputId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    fetch('/cart/count').then(r => r.json()).then(d => {
+        const b = document.getElementById('navCartCount');
+        if (b && d.count !== undefined) b.textContent = d.count;
+    }).catch(() => {});
 </script>
 </body>
 </html>

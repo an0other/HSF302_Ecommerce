@@ -6,64 +6,223 @@
     <title>My Orders — Voltex</title>
     <link rel="stylesheet" th:href="@{/css/indexstyle.css}" />
     <link rel="stylesheet" th:href="@{/css/orders.css}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+    <style>
+        .nav-user-wrap { position: relative; }
+        .nav-user-btn { display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;background:var(--clr-surface-alt);border:1.5px solid var(--clr-border);border-radius:var(--radius-full);cursor:pointer;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--clr-text-primary);white-space:nowrap;transition:border-color var(--duration-fast),background var(--duration-fast); }
+        .nav-user-btn:hover { border-color:var(--clr-accent);background:var(--clr-accent-light);color:var(--clr-accent); }
+        .nav-user-avatar { width:26px;height:26px;border-radius:50%;background:var(--clr-accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:11px;font-weight:800;color:#fff;flex-shrink:0;text-transform:uppercase; }
+        .nav-user-chevron { color:var(--clr-text-muted);transition:transform var(--duration-normal) var(--ease-out);flex-shrink:0; }
+        .nav-user-btn--open .nav-user-chevron { transform:rotate(180deg); }
+        .nav-user-dropdown { position:absolute;top:calc(100% + 10px);right:0;min-width:200px;background:var(--clr-surface);border:1px solid var(--clr-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:6px 0;z-index:200;opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity var(--duration-normal) var(--ease-out),transform var(--duration-normal) var(--ease-out); }
+        .nav-user-dropdown--open { opacity:1;pointer-events:all;transform:translateY(0); }
+        .nav-user-dropdown-header { padding:10px 16px 8px;border-bottom:1px solid var(--clr-border-light);margin-bottom:4px; }
+        .nav-user-dropdown-name { font-family:var(--font-display);font-size:13.5px;font-weight:700;color:var(--clr-text-primary); }
+        .nav-user-dropdown-email { font-size:11.5px;color:var(--clr-text-muted);font-weight:300;margin-top:2px; }
+        .nav-dropdown-item { display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13.5px;color:var(--clr-text-secondary);text-decoration:none;transition:background var(--duration-fast),color var(--duration-fast); }
+        .nav-dropdown-item:hover { background:var(--clr-surface-alt);color:var(--clr-text-primary); }
+        .nav-dropdown-item--danger:hover { background:#fff1f0;color:#c53030; }
+        .nav-dropdown-divider { height:1px;background:var(--clr-border-light);margin:4px 0; }
+    </style>
 </head>
 <body>
 
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════ -->
+<header class="navbar" id="navbar">
+    <div class="nav-top-row">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+            <div class="nav-search" id="navSearch">
+                <div class="search-cat-select" id="searchCatSelect">
+                    <button class="search-cat-btn" id="searchCatBtn" type="button">
+                        <span id="searchCatLabel">All</span>
+                        <svg class="search-cat-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <ul class="search-cat-dropdown" id="searchCatDropdown">
+                        <li class="search-cat-option search-cat-option--active" data-value="" data-label="All">All Categories</li>
+                    </ul>
+                </div>
+                <div class="search-sep"></div>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search products, brands…" autocomplete="off" />
+                <button class="search-btn" id="searchSubmit" aria-label="Search">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+            </div>
+            <div class="nav-actions">
+                <div class="nav-user-wrap" id="navUserWrap">
+                    <button class="nav-user-btn" id="navUserBtn" type="button" aria-haspopup="true" aria-expanded="false">
+                        <div class="nav-user-avatar" th:text="${#strings.substring(session.loggedInUser.username,0,1)}">U</div>
+                        <span th:text="'Hello, ' + ${session.loggedInUser.username}">Hello, user</span>
+                        <svg class="nav-user-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="nav-user-dropdown" id="navUserDropdown">
+                        <div class="nav-user-dropdown-header">
+                            <div class="nav-user-dropdown-name" th:text="${session.loggedInUser.username}">username</div>
+                            <div class="nav-user-dropdown-email" th:text="${session.loggedInUser.email}">email</div>
+                        </div>
+                        <a href="/orders"  class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> My Orders</a>
+                        <a href="/profile" class="nav-dropdown-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> My Profile</a>
+                        <div class="nav-dropdown-divider"></div>
+                        <a href="/logout"  class="nav-dropdown-item nav-dropdown-item--danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</a>
+                    </div>
+                </div>
+                <a href="/cart" class="nav-cart-btn" aria-label="Cart">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span class="nav-cart-count" id="navCartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <nav class="nav-cat-strip">
+        <div class="nav-cat-inner">
+            <a href="/products" class="nav-cat-link nav-cat-link--all">All</a>
+        </div>
+    </nav>
+</header>
+
+<!-- ═══ MAIN ══════════════════════════════════════════════════ -->
 <main class="orders-main">
     <div class="orders-container">
 
-        <div class="orders-breadcrumb">
+        <!-- Breadcrumb -->
+        <nav class="orders-breadcrumb" aria-label="Breadcrumb">
             <a href="/" class="breadcrumb-link">Home</a>
             <span class="breadcrumb-sep">/</span>
             <span class="breadcrumb-current">My Orders</span>
-        </div>
+        </nav>
 
+        <!-- Title -->
         <div class="orders-title-row">
             <div>
                 <h1 class="orders-title">My Orders</h1>
-                <p class="orders-count" th:text="${#lists.size(orders)} + ' orders found'">0 orders found</p>
+                <p class="orders-count" th:text="${#lists.size(orders)} + ' order' + (${#lists.size(orders) == 1} ? '' : 's') + ' placed'">0 orders placed</p>
             </div>
         </div>
 
+        <!-- Empty state -->
         <div class="orders-empty" th:if="${#lists.isEmpty(orders)}">
+            <div class="orders-empty-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </div>
             <h3>No orders yet</h3>
-            <p>You have not placed any orders yet.</p>
-            <a href="/products" class="orders-shop-btn">Continue Shopping</a>
+            <p>You haven't placed any orders. Explore our store and find something you love!</p>
+            <a href="/products" class="orders-shop-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Start Shopping
+            </a>
         </div>
 
+        <!-- Orders list -->
         <div class="orders-list" th:if="${!#lists.isEmpty(orders)}">
             <div class="order-card" th:each="order : ${orders}">
-                <div class="order-card-top">
-                    <div>
-                        <div class="order-label">Order ID</div>
-                        <div class="order-value" th:text="'#' + ${order.id}">#1</div>
-                    </div>
-                    <div>
-                        <div class="order-label">Created At</div>
-                        <div class="order-value"
-                             th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">15/03/2026 10:30</div>
-                    </div>
-                    <div>
-                        <div class="order-label">Status</div>
-                        <div class="order-status" th:text="${order.status}">PENDING</div>
-                    </div>
-                    <div>
-                        <div class="order-label">Total Price</div>
-                        <div class="order-price"
-                             th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
-                            1,000,000 ₫
-                        </div>
-                    </div>
+
+                <div class="order-card-header">
+                    <span class="order-card-id">Order <span th:text="'#' + ${order.id}">#1</span></span>
+                    <span class="order-card-date" th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy, HH:mm')}">15 Mar 2026, 10:30</span>
                 </div>
 
-                <div class="order-card-bottom">
-                    <a th:href="@{/orders/{id}(id=${order.id})}" class="order-view-btn">View Detail</a>
+                <div class="order-card-body">
+                    <div class="order-info-block">
+                        <span class="order-info-label">Status</span>
+                        <span class="order-status-badge"
+                              th:classappend="'status--' + ${#strings.toLowerCase(order.status)}"
+                              th:text="${order.status}">PENDING</span>
+                    </div>
+                    <div class="order-info-block">
+                        <span class="order-info-label">Order Total</span>
+                        <span class="order-price-value"
+                              th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                    </div>
+                    <div class="order-info-block">
+                        <span class="order-info-label">Date Placed</span>
+                        <span class="order-info-value"
+                              th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy')}">15/03/2026</span>
+                    </div>
+                    <a th:href="@{/orders/{id}(id=${order.id})}" class="order-view-btn">
+                        View Details
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
                 </div>
+
             </div>
         </div>
 
     </div>
 </main>
 
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div class="footer-col footer-col--brand">
+                <a href="/" class="footer-logo"><span class="logo-volt">VOLT</span><span class="logo-ex">EX</span></a>
+                <p class="footer-about">Voltex is your destination for premium electronics.</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Customer Support</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Track Your Order</a></li>
+                    <li><a href="#" class="footer-link">Returns &amp; Exchanges</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Company</h4>
+                <ul class="footer-list">
+                    <li><a href="#" class="footer-link">About Voltex</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span class="footer-copy">&copy; 2025 Voltex Electronics. All rights reserved.</span>
+            <div class="footer-pay">
+                <span class="pay-label">We accept:</span>
+                <span class="pay-chip">Visa</span><span class="pay-chip">Mastercard</span>
+                <span class="pay-chip">VNPay</span><span class="pay-chip">COD</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<div id="toastContainer" style="position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:12px;pointer-events:none;max-width:360px;"></div>
+
+<script>
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => navbar.classList.toggle('navbar--scrolled', window.scrollY > 10), { passive: true });
+
+    const navUserBtn = document.getElementById('navUserBtn');
+    const navUserDropdown = document.getElementById('navUserDropdown');
+    if (navUserBtn) {
+        navUserBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const open = navUserDropdown.classList.toggle('nav-user-dropdown--open');
+            navUserBtn.classList.toggle('nav-user-btn--open', open);
+            navUserBtn.setAttribute('aria-expanded', open);
+        });
+    }
+    document.addEventListener('click', () => {
+        navUserDropdown?.classList.remove('nav-user-dropdown--open');
+        navUserBtn?.classList.remove('nav-user-btn--open');
+        navUserBtn?.setAttribute('aria-expanded', 'false');
+    });
+
+    document.getElementById('searchSubmit').addEventListener('click', () => {
+        const kw = document.getElementById('searchInput').value.trim();
+        if (kw) location.href = '/products?keyword=' + encodeURIComponent(kw);
+        else location.href = '/products';
+    });
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('searchSubmit').click();
+    });
+
+    fetch('/cart/count').then(r => r.json()).then(d => {
+        const b = document.getElementById('navCartCount');
+        if (b && d.count !== undefined) b.textContent = d.count;
+    }).catch(() => {});
+</script>
 </body>
 </html>
