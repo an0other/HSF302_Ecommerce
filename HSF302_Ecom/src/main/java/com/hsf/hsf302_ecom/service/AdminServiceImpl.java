@@ -2,6 +2,7 @@ package com.hsf.hsf302_ecom.service;
 
 import com.hsf.hsf302_ecom.dto.admin.*;
 import com.hsf.hsf302_ecom.entity.*;
+import com.hsf.hsf302_ecom.enums.OrderStatus;
 import com.hsf.hsf302_ecom.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -233,5 +234,30 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("Inventory not found"));
         inv.setStock(inv.getStock() + amount);
         inventoriesRepo.save(inv);
+    }
+
+    @Override
+    public List<Orders> getAllOrders() {
+        return ordersRepo.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Override
+    public List<Orders> getOrdersByStatus(OrderStatus status) {
+        return ordersRepo.findByStatusOrderByCreatedAtDesc(status);
+    }
+
+    @Override
+    public Orders getOrderById(Long id) {
+        return ordersRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+    }
+    @Transactional
+    @Override
+    public void updateOrderStatus(Long orderId, OrderStatus status) {
+        Orders order = ordersRepo.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+
+        order.setStatus(status);
+        ordersRepo.save(order);
     }
 }

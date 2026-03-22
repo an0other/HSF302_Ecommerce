@@ -5,6 +5,7 @@ import com.hsf.hsf302_ecom.dto.OrderDetailDTO;
 import com.hsf.hsf302_ecom.dto.OrderItemDTO;
 import com.hsf.hsf302_ecom.entity.Orders;
 import com.hsf.hsf302_ecom.entity.Payments;
+import com.hsf.hsf302_ecom.enums.OrderStatus;
 import com.hsf.hsf302_ecom.repository.OrderItemsRepo;
 import com.hsf.hsf302_ecom.repository.OrdersRepo;
 import com.hsf.hsf302_ecom.repository.PaymentsRepo;
@@ -85,4 +86,5 @@ public class OrdersServiceImpl implements OrdersService {
                 .paymentPaid(paymentPaid)
                 .build();
     }
+
 }
