@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Dashboard', ~{::main})}">
+<head><title>Dashboard — Voltex Admin</title></head>
+<body>
+<main>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title">Dashboard</h1>
+            <p class="adm-page-sub">Store overview at a glance</p>
+        </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="adm-stats-grid">
+
+        <div class="adm-stat-card">
+            <div class="adm-stat-icon adm-stat-icon--blue">
+
+            </div>
+            <div class="adm-stat-body">
+                <div class="adm-stat-value" th:text="${stats.totalBrands}">0</div>
+                <div class="adm-stat-label">Total Brands</div>
+                <div class="adm-stat-sub" th:text="${stats.activeBrands} + ' active'">0 active</div>
+            </div>
+        </div>
+
+        <div class="adm-stat-card">
+            <div class="adm-stat-icon adm-stat-icon--purple">
+
+            </div>
+            <div class="adm-stat-body">
+                <div class="adm-stat-value" th:text="${stats.totalCategories}">0</div>
+                <div class="adm-stat-label">Total Categories</div>
+                <div class="adm-stat-sub" th:text="${stats.activeCategories} + ' active'">0 active</div>
+            </div>
+        </div>
+
+        <div class="adm-stat-card">
+            <div class="adm-stat-icon adm-stat-icon--accent">
+
+            </div>
+            <div class="adm-stat-body">
+                <div class="adm-stat-value" th:text="${stats.totalProducts}">0</div>
+                <div class="adm-stat-label">Products</div>
+                <div class="adm-stat-sub" th:text="${stats.totalVariants} + ' variants'">0 variants</div>
+            </div>
+        </div>
+
+        <div class="adm-stat-card">
+            <div class="adm-stat-icon adm-stat-icon--green">
+
+            </div>
+            <div class="adm-stat-body">
+                <div class="adm-stat-value" th:text="${stats.totalOrders}">0</div>
+                <div class="adm-stat-label">Total Orders</div>
+                <div class="adm-stat-sub" th:text="${stats.totalUsers} + ' users'">0 users</div>
+            </div>
+        </div>
+
+        <div class="adm-stat-card adm-stat-card--warn" th:classappend="${stats.lowStockVariants > 0} ? ' adm-stat-card--warn'">
+            <div class="adm-stat-icon adm-stat-icon--warn">
+
+            </div>
+            <div class="adm-stat-body">
+                <div class="adm-stat-value" th:text="${stats.lowStockVariants}">0</div>
+                <div class="adm-stat-label">Low Stock Variants</div>
+                <a th:href="@{/admin/inventory}" class="adm-stat-sub adm-stat-sub--link">View inventory →</a>
+            </div>
+        </div>
+
+        <div class="adm-stat-card" th:classappend="${stats.outOfStockVariants > 0} ? ' adm-stat-card--danger'">
+            <div class="adm-stat-icon adm-stat-icon--red">
+
+            </div>
+            <div class="adm-stat-body">
+                <div class="adm-stat-value" th:text="${stats.outOfStockVariants}">0</div>
+                <div class="adm-stat-label">Out of Stock</div>
+                <a th:href="@{/admin/inventory}" class="adm-stat-sub adm-stat-sub--link">Restock now →</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick access -->
+    <div class="adm-quick-grid">
+        <a th:href="@{/admin/brands/new}" class="adm-quick-card">
+            <span>New Brand</span>
+        </a>
+        <a th:href="@{/admin/categories/new}" class="adm-quick-card">
+            <span>New Category</span>
+        </a>
+        <a th:href="@{/admin/inventory}" class="adm-quick-card">
+            <span>Manage Inventory</span>
+        </a>
+        <a href="/products" target="_blank" class="adm-quick-card">
+            <span>View Store</span>
+        </a>
+    </div>
+
+</main>
+</body>
+</html>

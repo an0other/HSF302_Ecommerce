@@ -2,6 +2,7 @@ package com.hsf.hsf302_ecom.controller;
 
 import com.hsf.hsf302_ecom.dto.RegisterDTO;
 import com.hsf.hsf302_ecom.entity.Users;
+import com.hsf.hsf302_ecom.enums.UserRole;
 import com.hsf.hsf302_ecom.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -53,11 +54,16 @@ public class AuthController {
             model.addAttribute("loginError", "Invalid credentials or account not activated.");
             return "auth/login";
         }
+
         Users user = result.get();
         session.setAttribute(SK_USER, user);
         session.setMaxInactiveInterval(3600);
         ra.addFlashAttribute("toast", "Welcome back, " + user.getUsername() + "! \uD83D\uDC4B");
         ra.addFlashAttribute("toastType", "success");
+
+        if (user.getRole() == UserRole.ADMIN) {
+            return "redirect:/admin";
+        }
         return "redirect:/";
     }
 

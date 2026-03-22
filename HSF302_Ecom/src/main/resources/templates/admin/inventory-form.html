@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Inventory', ~{::main})}">
+<head><title>Edit Inventory — Voltex Admin</title></head>
+<body>
+<main>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title">Edit Inventory</h1>
+            <p class="adm-page-sub" th:text="${inventoryForm.productName} + ' — ' + ${inventoryForm.variantLabel}">Product — Variant</p>
+        </div>
+        <a th:href="@{/admin/inventory}" class="adm-btn adm-btn--ghost">← Back to Inventory</a>
+    </div>
+
+    <div class="adm-form-card">
+
+        <div class="adm-form-error" th:if="${formError}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span th:text="${formError}"></span>
+        </div>
+
+        <!-- Read-only product info -->
+        <div class="adm-info-block">
+            <div class="adm-info-row">
+                <span class="adm-info-label">Product</span>
+                <span class="adm-info-value" th:text="${inventoryForm.productName}">—</span>
+            </div>
+            <div class="adm-info-row">
+                <span class="adm-info-label">Color</span>
+                <span class="adm-info-value" th:text="${inventoryForm.color}">—</span>
+            </div>
+            <div class="adm-info-row">
+                <span class="adm-info-label">Spec</span>
+                <span class="adm-info-value" th:text="${inventoryForm.spec}">—</span>
+            </div>
+        </div>
+
+        <div class="adm-form-divider"></div>
+
+        <form th:action="@{/admin/inventory/{id}/edit(id=${variantId})}"
+              th:object="${inventoryForm}" method="post" class="adm-form">
+
+            <div class="adm-form-row">
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="stock">
+                        Total Stock
+                        <span class="adm-required">*</span>
+                    </label>
+                    <input type="number" id="stock" th:field="*{stock}"
+                           th:classappend="${#fields.hasErrors('stock')} ? ' adm-input--error'"
+                           class="adm-input adm-input--mono" min="0" />
+                    <span class="adm-field-error" th:if="${#fields.hasErrors('stock')}" th:errors="*{stock}"></span>
+                    <span class="adm-field-hint">Physical units in warehouse</span>
+                </div>
+
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="reserved">
+                        Reserved
+                        <span class="adm-required">*</span>
+                    </label>
+                    <input type="number" id="reserved" th:field="*{reserved}"
+                           th:classappend="${#fields.hasErrors('reserved')} ? ' adm-input--error'"
+                           class="adm-input adm-input--mono" min="0" />
+                    <span class="adm-field-error" th:if="${#fields.hasErrors('reserved')}" th:errors="*{reserved}"></span>
+                    <span class="adm-field-hint">Units held in active carts</span>
+                </div>
+            </div>
+
+            <div class="adm-calc-box" id="calcBox">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Available = Stock − Reserved = <strong id="calcAvail">—</strong>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Save Inventory
+                </button>
+                <a th:href="@{/admin/inventory}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        function recalc() {
+            const stock    = parseInt(document.getElementById('stock').value)    || 0;
+            const reserved = parseInt(document.getElementById('reserved').value) || 0;
+            const avail    = Math.max(0, stock - reserved);
+            const el       = document.getElementById('calcAvail');
+            el.textContent = avail;
+            el.style.color = avail <= 0 ? '#dc2626' : avail <= 5 ? '#d97706' : '#16a34a';
+        }
+        document.getElementById('stock').addEventListener('input', recalc);
+        document.getElementById('reserved').addEventListener('input', recalc);
+        recalc();
+    </script>
+
+</main>
+</body>
+</html>

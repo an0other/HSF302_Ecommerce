@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Category', ~{::main})}">
+<head>
+    <title th:text="${isEdit} ? 'Edit Category — Voltex Admin' : 'New Category — Voltex Admin'">Category Form</title>
+</head>
+<body>
+<main>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title" th:text="${isEdit} ? 'Edit Category' : 'New Category'">Category</h1>
+            <p class="adm-page-sub" th:text="${isEdit} ? 'Update category details' : 'Create a new product category'">—</p>
+        </div>
+        <a th:href="@{/admin/categories}" class="adm-btn adm-btn--ghost">← Back to Categories</a>
+    </div>
+
+    <div class="adm-form-card">
+
+        <div class="adm-form-error" th:if="${formError}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span th:text="${formError}"></span>
+        </div>
+
+        <!-- ── EDIT form ──────────────────────────────────────── -->
+        <form th:if="${isEdit}"
+              th:action="@{/admin/categories/{id}/edit(id=${categoryId})}"
+              th:object="${categoryForm}"
+              method="post"
+              class="adm-form">
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="nameEdit">Category Name <span class="adm-required">*</span></label>
+                <input type="text" id="nameEdit" th:field="*{name}"
+                       th:classappend="${#fields.hasErrors('name')} ? ' adm-input--error'"
+                       class="adm-input" placeholder="e.g. Smartphones, Laptops, Accessories…" autofocus />
+                <span class="adm-field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label">Status</label>
+                <div class="adm-toggle-group">
+                    <label class="adm-toggle-opt">
+                        <input type="radio" th:field="*{status}" th:value="${true}" />
+                        <span class="adm-toggle-label adm-toggle-label--green">Active</span>
+                    </label>
+                    <label class="adm-toggle-opt" th:classappend="${hasInventory} ? ' adm-toggle-opt--locked'">
+                        <input type="radio" th:field="*{status}" th:value="${false}"
+                               th:disabled="${hasInventory}" />
+                        <span class="adm-toggle-label adm-toggle-label--red">Inactive</span>
+                    </label>
+                </div>
+                <span th:if="${hasInventory}" class="adm-field-hint adm-field-hint--warn">
+                Cannot deactivate — this category still has products with stock in inventory.
+            </span>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Save Changes
+                </button>
+                <a th:href="@{/admin/categories}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+
+        </form>
+
+        <!-- ── CREATE form ────────────────────────────────────── -->
+        <form th:unless="${isEdit}"
+              th:action="@{/admin/categories/new}"
+              th:object="${categoryForm}"
+              method="post"
+              class="adm-form">
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="nameNew">Category Name <span class="adm-required">*</span></label>
+                <input type="text" id="nameNew" th:field="*{name}"
+                       th:classappend="${#fields.hasErrors('name')} ? ' adm-input--error'"
+                       class="adm-input" placeholder="e.g. Smartphones, Laptops, Accessories…" autofocus />
+                <span class="adm-field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label">Status</label>
+                <div class="adm-toggle-group">
+                    <label class="adm-toggle-opt">
+                        <input type="radio" th:field="*{status}" th:value="${true}" />
+                        <span class="adm-toggle-label adm-toggle-label--green">Active</span>
+                    </label>
+                    <label class="adm-toggle-opt">
+                        <input type="radio" th:field="*{status}" th:value="${false}" />
+                        <span class="adm-toggle-label adm-toggle-label--red">Inactive</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Create Category
+                </button>
+                <a th:href="@{/admin/categories}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+
+        </form>
+
+    </div>
+
+</main>
+</body>
+</html>
