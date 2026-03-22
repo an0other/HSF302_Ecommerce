@@ -3,9 +3,12 @@ package com.hsf.hsf302_ecom.controller;
 import com.hsf.hsf302_ecom.dto.admin.BrandFormDTO;
 import com.hsf.hsf302_ecom.dto.admin.CategoryFormDTO;
 import com.hsf.hsf302_ecom.dto.admin.InventoryFormDTO;
+import com.hsf.hsf302_ecom.dto.admin.UpdateOrderStatusRequest;
 import com.hsf.hsf302_ecom.entity.Brands;
 import com.hsf.hsf302_ecom.entity.Categories;
+import com.hsf.hsf302_ecom.entity.Orders;
 import com.hsf.hsf302_ecom.entity.Users;
+import com.hsf.hsf302_ecom.enums.OrderStatus;
 import com.hsf.hsf302_ecom.enums.UserRole;
 import com.hsf.hsf302_ecom.service.AdminService;
 import jakarta.servlet.http.HttpSession;
@@ -18,6 +21,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 @Controller
@@ -276,5 +282,45 @@ public class AdminController {
             ra.addFlashAttribute("toastType", "error");
         }
         return "redirect:/admin/inventory";
+    }
+
+    @GetMapping("/orders")
+    public String manageOrders(
+            @RequestParam(required = false) OrderStatus status,
+            Model model
+    ) {
+        List<Orders> orders = (status == null)
+                ? adminService.getAllOrders()
+                : adminService.getOrdersByStatus(status);
+
+        model.addAttribute("orders", orders);
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("allStatuses", OrderStatus.values());
+        model.addAttribute("section", "orders");
+
+        return "admin/orders-management";
+    }
+
+    @GetMapping("/orders/{id}")
+    public String orderDetail(@PathVariable Long id, Model model) {
+        Orders order = adminService.getOrderById(id);
+
+        UpdateOrderStatusRequest req = new UpdateOrderStatusRequest();
+        req.setStatus(order.getStatus());
+
+        model.addAttribute("order", order);
+        model.addAttribute("allStatuses", Arrays.asList(OrderStatus.values()));
+        model.addAttribute("updateRequest", req);
+        model.addAttribute("section", "orders");
+        return "admin/order-update-status";
+    }
+
+    @PostMapping("/orders/{id}/status")
+    public String updateOrderStatus(
+            @PathVariable Long id,
+            @ModelAttribute UpdateOrderStatusRequest updateRequest
+    ) {
+        adminService.updateOrderStatus(id, updateRequest.getStatus());
+        return "redirect:/admin/orders/" + id + "?updated";
     }
 }

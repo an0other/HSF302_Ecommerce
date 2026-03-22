@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Orders', ~{::main})}">
+<head>
+    <title>Orders Management — Voltex Admin</title>
+</head>
+<body>
+<main>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title">Orders Management</h1>
+            <p class="adm-page-sub">Manage customer orders and update status</p>
+        </div>
+    </div>
+
+    <div class="adm-card">
+        <form th:action="@{/admin/orders}" method="get" class="adm-toolbar">
+            <div class="adm-toolbar-left">
+                <select name="status" class="adm-input">
+                    <option value="">All Statuses</option>
+                    <option th:each="status : ${allStatuses}"
+                            th:value="${status}"
+                            th:text="${status}"
+                            th:selected="${selectedStatus != null and selectedStatus.name() == status.name()}">
+                    </option>
+                </select>
+                <button type="submit" class="adm-btn adm-btn-primary">Filter</button>
+            </div>
+        </form>
+
+        <div class="adm-table-wrap" th:if="${!#lists.isEmpty(orders)}">
+            <table class="adm-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Created At</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th style="width: 150px;">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${orders}">
+                    <td th:text="${order.id}"></td>
+                    <td th:text="${order.user.username}"></td>
+                    <td th:text="${order.user.phone}"></td>
+                    <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                    <td>
+                        <span class="adm-badge"
+                              th:text="${order.status}"
+                              th:classappend="${
+                                order.status.name() == 'PENDING' ? ' adm-badge-warning' :
+                                order.status.name() == 'CONFIRMED' ? ' adm-badge-info' :
+                                order.status.name() == 'PROCESSING' ? ' adm-badge-orange' :
+                                order.status.name() == 'SHIPPED' ? ' adm-badge-primary' :
+                                order.status.name() == 'DELIVERED' ? ' adm-badge-success' :
+                                ' adm-badge-danger'
+                              }">
+                        </span>
+                    </td>
+                    <td>
+                        <a th:href="@{/admin/orders/{id}(id=${order.id})}" class="adm-btn adm-btn-sm">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${#lists.isEmpty(orders)}" class="adm-empty-state">
+            No orders found.
+        </div>
+    </div>
+
+</main>
+</body>
+</html>
