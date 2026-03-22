@@ -1,6 +1,8 @@
 package com.hsf.hsf302_ecom.repository;
 
 import com.hsf.hsf302_ecom.entity.Inventories;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -102,4 +104,49 @@ public interface InventoriesRepo extends JpaRepository<Inventories, Long> {
         """)
     void restockOnCancel(@Param("variantId") Long variantId,
                          @Param("qty")       Long qty);
+
+    @Query(value = """
+        SELECT i FROM Inventories i
+        JOIN i.productVariant pv
+        JOIN pv.product p
+        JOIN p.brand b
+        JOIN p.category c
+        WHERE (:keyword IS NULL OR
+               LOWER(p.name)  LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(pv.color) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(pv.spec)  LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(b.name)  LIKE LOWER(CONCAT('%', :keyword, '%')))
+          AND (:categoryId IS NULL OR c.id = :categoryId)
+          AND (:brandId    IS NULL OR b.id = :brandId)
+        ORDER BY
+            CASE WHEN (i.stock - i.reserved) <= 0 THEN 0
+                 WHEN (i.stock - i.reserved) <= 5 THEN 1
+                 ELSE 2 END,
+            p.name ASC
+        """,
+            countQuery = """
+        SELECT COUNT(i) FROM Inventories i
+        JOIN i.productVariant pv
+        JOIN pv.product p
+        JOIN p.brand b
+        JOIN p.category c
+        WHERE (:keyword IS NULL OR
+               LOWER(p.name)  LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(pv.color) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(pv.spec)  LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+               LOWER(b.name)  LIKE LOWER(CONCAT('%', :keyword, '%')))
+          AND (:categoryId IS NULL OR c.id = :categoryId)
+          AND (:brandId    IS NULL OR b.id = :brandId)
+        """)
+    Page<Inventories> findByFilters(
+            @Param("keyword")    String keyword,
+            @Param("categoryId") Long categoryId,
+            @Param("brandId")    Long brandId,
+            Pageable pageable);
+
+    @Query("SELECT COUNT(i) FROM Inventories i WHERE (i.stock - i.reserved) <= 0")
+    long countOutOfStock();
+
+    @Query("SELECT COUNT(i) FROM Inventories i WHERE (i.stock - i.reserved) > 0 AND (i.stock - i.reserved) <= 5")
+    long countLowStock();
 }
