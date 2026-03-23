@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Products', ~{::main})}">
+<head><title>Inventory — Voltex Admin</title></head>
+<body>
+<main>
+
+    <!-- Breadcrumb -->
+    <div th:replace="~{admin/fragments/product-breadcrumb :: breadcrumb('inventory', ${product}, ${inventoryForm.variantLabel}, ${variantId})}"></div>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title">Inventory</h1>
+            <p class="adm-page-sub" th:text="'Manage stock for ' + ${inventoryForm.variantLabel}">—</p>
+        </div>
+        <a th:href="@{/admin/products/{id}/variants(id=${product.id})}" class="adm-btn adm-btn--ghost">← Back to Variants</a>
+    </div>
+
+    <div class="adm-form-card" style="max-width:560px;">
+
+        <div class="adm-form-error" th:if="${formError}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span th:text="${formError}"></span>
+        </div>
+
+        <!-- Read-only info block -->
+        <div class="adm-info-block">
+            <div class="adm-info-row">
+                <span class="adm-info-label">Product</span>
+                <span class="adm-info-value" th:text="${inventoryForm.productName}">—</span>
+            </div>
+            <div class="adm-info-row">
+                <span class="adm-info-label">Color</span>
+                <span class="adm-info-value" th:text="${inventoryForm.color}">—</span>
+            </div>
+            <div class="adm-info-row">
+                <span class="adm-info-label">Spec</span>
+                <span class="adm-info-value" th:text="${inventoryForm.spec}">—</span>
+            </div>
+        </div>
+
+        <div class="adm-form-divider"></div>
+
+        <form th:action="@{/admin/products/{pid}/variants/{vid}/inventory(pid=${product.id},vid=${variantId})}"
+              th:object="${inventoryForm}" method="post" class="adm-form">
+
+            <!-- Hidden fields — submitted as-is, not editable -->
+            <input type="hidden" th:field="*{stock}" />
+            <input type="hidden" th:field="*{reserved}" />
+
+            <!-- Current stock stats (read-only) -->
+            <div class="adm-form-row">
+                <div class="adm-form-field">
+                    <label class="adm-form-label">Current Stock</label>
+                    <div class="adm-input adm-input--mono adm-input--readonly" th:text="${inventoryForm.stock}">0</div>
+                    <span class="adm-field-hint">Physical units in warehouse</span>
+                </div>
+                <div class="adm-form-field">
+                    <label class="adm-form-label">Reserved</label>
+                    <div class="adm-input adm-input--mono adm-input--readonly" th:text="${inventoryForm.reserved}">0</div>
+                    <span class="adm-field-hint">Units held in active carts</span>
+                </div>
+            </div>
+
+            <div class="adm-form-divider"></div>
+
+            <!-- Add amount -->
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="addAmount">Add Stock <span class="adm-required">*</span></label>
+                <input type="number" id="addAmount" name="addAmount"
+                       class="adm-input adm-input--mono" min="0" value="0"
+                       oninput="recalc()" />
+                <span class="adm-field-hint">Units to add to current stock</span>
+            </div>
+
+            <!-- Preview -->
+            <div class="adm-calc-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span th:text="${inventoryForm.stock}" id="baseStock" style="display:none">0</span>
+                New total: <strong id="calcTotal">—</strong>
+                &nbsp;·&nbsp; Available = <strong id="calcAvail">—</strong>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Save Inventory
+                </button>
+                <a th:href="@{/admin/products/{id}/variants(id=${product.id})}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const baseStock  = parseInt(document.getElementById('baseStock').textContent)  || 0;
+        const reserved   = /*[[${inventoryForm.reserved}]]*/ 0;
+
+        function recalc() {
+            const add     = Math.max(0, parseInt(document.getElementById('addAmount').value) || 0);
+            const total   = baseStock + add;
+            const avail   = Math.max(0, total - reserved);
+
+            // update hidden stock field so the correct value is submitted
+            document.querySelector('input[name="stock"]').value = total;
+
+            const totalEl = document.getElementById('calcTotal');
+            const availEl = document.getElementById('calcAvail');
+
+            totalEl.textContent = total;
+            availEl.textContent = avail;
+            availEl.style.color = avail <= 0 ? '#dc2626' : avail <= 5 ? '#d97706' : '#16a34a';
+        }
+
+        recalc();
+    </script>
+
+</main>
+</body>
+</html>

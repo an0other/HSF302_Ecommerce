@@ -1,0 +1,315 @@
+/* ============================================================
+   VOLTEX — admin-products.css
+   Styles for the product / variant / inventory CRUD flow
+   ============================================================ */
+
+/* ── Product Breadcrumb Trail ────────────────────────────── */
+.prod-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 20px;
+    padding: 10px 16px;
+    background: var(--adm-surface-2);
+    border: 1px solid var(--adm-border);
+    border-radius: var(--radius-md);
+    flex-wrap: wrap;
+}
+
+.prod-bc-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--adm-text-2);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+    white-space: nowrap;
+}
+
+.prod-bc-item:hover:not(.prod-bc-item--active) {
+    background: var(--adm-surface-3);
+    color: var(--adm-text-1);
+    border-color: var(--adm-border-2);
+}
+
+.prod-bc-item--active {
+    background: var(--adm-accent-bg);
+    color: var(--adm-accent);
+    border-color: rgba(232,68,26,.2);
+    font-weight: 600;
+    cursor: default;
+    pointer-events: none;
+}
+
+.prod-bc-sep {
+    color: var(--adm-text-3);
+    font-size: 16px;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.prod-bc-product {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.prod-bc-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .75;
+    border-left: 1px solid currentColor;
+    padding-left: 6px;
+    margin-left: 2px;
+}
+
+/* ── Context Card — shows current selection ──────────────── */
+.prod-context-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border);
+    border-left: 3px solid var(--adm-accent);
+    border-radius: var(--radius-md);
+    margin-bottom: 4px;
+}
+
+.prod-context-card--sub {
+    margin-left: 24px;
+    border-left-color: var(--adm-blue);
+}
+
+.prod-context-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--adm-accent-bg);
+    color: var(--adm-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.prod-context-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.prod-context-label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--adm-text-3);
+    margin-bottom: 2px;
+}
+
+.prod-context-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--adm-text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.prod-context-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--adm-text-3);
+}
+
+.prod-context-sep {
+    color: var(--adm-border-2);
+}
+
+/* ── Stage Progress Indicator ────────────────────────────── */
+.prod-stage-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border);
+    border-radius: var(--radius-md);
+}
+
+.prod-stage-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    min-width: 90px;
+}
+
+.prod-stage-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    border: 2px solid var(--adm-border-2);
+    color: var(--adm-text-3);
+    background: var(--adm-surface-2);
+    transition: all var(--dur-normal);
+}
+
+.prod-stage-step--done .prod-stage-circle {
+    background: var(--adm-green);
+    border-color: var(--adm-green);
+    color: #fff;
+}
+
+.prod-stage-step--active .prod-stage-circle {
+    background: var(--adm-accent);
+    border-color: var(--adm-accent);
+    color: #fff;
+    box-shadow: 0 0 0 4px var(--adm-accent-bg);
+}
+
+.prod-stage-label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--adm-text-3);
+    white-space: nowrap;
+}
+
+.prod-stage-step--active .prod-stage-label { color: var(--adm-accent); }
+.prod-stage-step--done  .prod-stage-label  { color: var(--adm-green); }
+
+.prod-stage-connector {
+    flex: 1;
+    height: 2px;
+    background: var(--adm-border);
+    margin-bottom: 20px;
+    min-width: 32px;
+}
+
+.prod-stage-connector--done { background: var(--adm-green); }
+
+/* ── Readonly display input ──────────────────────────────── */
+.adm-input--readonly {
+    background: var(--adm-surface-2);
+    color: var(--adm-text-2);
+    border-color: var(--adm-border);
+    cursor: default;
+    user-select: none;
+    display: flex;
+    align-items: center;
+}
+
+/* ── Text Action Buttons ─────────────────────────────────────
+   Replaces the square icon-only .adm-action-btn for tables
+   where labelled text improves usability.
+   Usage:  class="adm-text-btn"
+           class="adm-text-btn adm-text-btn--blue"    (Variants link)
+           class="adm-text-btn adm-text-btn--green"   (Inventory link)
+           class="adm-text-btn adm-text-btn--danger"  (Deactivate)
+           class="adm-text-btn adm-text-btn--blocked" (disabled state)
+─────────────────────────────────────────────────────────── */
+.adm-table-actions--text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.adm-text-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--adm-border-2);
+    background: var(--adm-surface);
+    color: var(--adm-text-2);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1;
+    transition: background var(--dur-fast), color var(--dur-fast),
+    border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.adm-text-btn:hover {
+    background: var(--adm-surface-3);
+    color: var(--adm-text-1);
+    border-color: var(--adm-border-2);
+}
+
+/* Blue variant — "Variants" link */
+.adm-text-btn--blue {
+    color: var(--adm-blue);
+    border-color: rgba(37,99,235,.25);
+    background: var(--adm-blue-bg);
+}
+.adm-text-btn--blue:hover {
+    background: rgba(37,99,235,.14);
+    border-color: rgba(37,99,235,.4);
+    color: var(--adm-blue);
+}
+
+/* Green variant — "Inventory" link */
+.adm-text-btn--green {
+    color: var(--adm-green);
+    border-color: rgba(22,163,74,.25);
+    background: var(--adm-green-bg);
+}
+.adm-text-btn--green:hover {
+    background: rgba(22,163,74,.14);
+    border-color: rgba(22,163,74,.4);
+    color: var(--adm-green);
+}
+
+/* Danger — "Deactivate" button */
+.adm-text-btn--danger {
+    color: var(--adm-red);
+    border-color: rgba(220,38,38,.2);
+    background: var(--adm-red-bg);
+}
+.adm-text-btn--danger:hover {
+    background: rgba(220,38,38,.14);
+    border-color: rgba(220,38,38,.4);
+    color: var(--adm-red);
+}
+
+/* Blocked / disabled state (has stock — cannot deactivate) */
+.adm-text-btn--blocked,
+.adm-text-btn--blocked:hover {
+    opacity: .35;
+    cursor: not-allowed;
+    background: var(--adm-surface-2);
+    color: var(--adm-text-3);
+    border-color: var(--adm-border);
+    box-shadow: none;
+    pointer-events: none;
+}

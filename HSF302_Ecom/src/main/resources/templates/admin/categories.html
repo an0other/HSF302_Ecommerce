@@ -48,20 +48,19 @@
                     <div class="adm-table-name" th:text="${cat.name}">Category</div>
                 </td>
                 <td>
-                <span class="adm-badge adm-badge--neutral"
-                      th:text="${cat.products != null ? cat.products.size() : 0} + ' products'">0</span>
+                    <span class="adm-badge adm-badge--neutral"
+                          th:text="${cat.products != null ? cat.products.size() : 0} + ' products'">0</span>
                 </td>
                 <td>
                     <span th:if="${cat.status}"    class="adm-badge adm-badge--green">Active</span>
                     <span th:unless="${cat.status}" class="adm-badge adm-badge--red">Inactive</span>
                 </td>
                 <td>
-                    <div class="adm-table-actions">
-
-                        <!-- Edit -->
+                    <div class="adm-table-actions adm-table-actions--text">
                         <a th:href="@{/admin/categories/{id}/edit(id=${cat.id})}"
-                           class="adm-action-btn" title="Edit category">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                           class="adm-text-btn">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Edit
                         </a>
                     </div>
                 </td>
@@ -69,7 +68,6 @@
             </tbody>
         </table>
     </div>
-
 
     <!-- Pagination -->
     <div th:if="${categoryPage.totalPages > 1}" class="adm-pagination" style="margin-top:16px;">

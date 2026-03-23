@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    stage:       'products' | 'variants' | 'inventory'
+    product:     Products entity (or null)
+    variantLabel: String (or null)
+    variantId:   Long (or null)
+-->
+<nav th:fragment="breadcrumb(stage, product, variantLabel, variantId)"
+     class="prod-breadcrumb" aria-label="Admin breadcrumb">
+
+    <!-- Always: Products -->
+    <a th:href="@{/admin/products}" class="prod-bc-item"
+       th:classappend="${stage == 'products'} ? ' prod-bc-item--active'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Products
+    </a>
+
+    <!-- If at variants or inventory stage -->
+    <th:block th:if="${stage == 'variants' or stage == 'inventory'}">
+        <span class="prod-bc-sep">›</span>
+        <a th:if="${product != null}"
+           th:href="@{/admin/products/{id}/variants(id=${product.id})}"
+           th:classappend="${stage == 'variants'} ? ' prod-bc-item--active'"
+           class="prod-bc-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span class="prod-bc-product" th:text="${product.name}">Product</span>
+            <span class="prod-bc-label">Variants</span>
+        </a>
+    </th:block>
+
+    <!-- If at inventory stage -->
+    <th:block th:if="${stage == 'inventory'}">
+        <span class="prod-bc-sep">›</span>
+        <span class="prod-bc-item prod-bc-item--active">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span th:text="${variantLabel}">Variant</span>
+            <span class="prod-bc-label">Inventory</span>
+        </span>
+    </th:block>
+
+</nav>
+</body>
+</html>
