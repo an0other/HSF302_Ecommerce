@@ -168,4 +168,35 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
             return findByFilterRating(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
         return findByFilterNewest(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
     }
+
+    // For admin pageable product list with filters
+    @Query(value = """
+    SELECT p FROM Products p
+    JOIN FETCH p.category
+    JOIN FETCH p.brand
+    LEFT JOIN FETCH p.productVariants
+    WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%',:keyword,'%')))
+      AND (:categoryId IS NULL OR p.category.id = :categoryId)
+      AND (:brandId    IS NULL OR p.brand.id    = :brandId)
+    ORDER BY p.createdDate DESC
+    """,
+            countQuery = """
+    SELECT COUNT(p) FROM Products p
+    WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%',:keyword,'%')))
+      AND (:categoryId IS NULL OR p.category.id = :categoryId)
+      AND (:brandId    IS NULL OR p.brand.id    = :brandId)
+    """)
+    Page<Products> findByFiltersAdmin(
+            @Param("keyword")    String keyword,
+            @Param("categoryId") Long categoryId,
+            @Param("brandId")    Long brandId,
+            Pageable pageable);
+
+    // Duplicate name check (excluding self for edit)
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
+
+    // Already exists in your repo? If not, add:
+    boolean existsByNameIgnoreCase(String name);
+
+
 }

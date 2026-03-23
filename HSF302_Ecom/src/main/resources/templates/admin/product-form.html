@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Products', ~{::main})}">
+<head>
+    <title th:text="${isEdit} ? 'Edit Product — Voltex Admin' : 'New Product — Voltex Admin'">Product Form</title>
+</head>
+<body>
+<main>
+
+    <!-- Breadcrumb -->
+    <div th:replace="~{admin/fragments/product-breadcrumb :: breadcrumb('products', null, null, null)}"></div>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title" th:text="${isEdit} ? 'Edit Product' : 'New Product'">Product</h1>
+            <p class="adm-page-sub" th:text="${isEdit} ? 'Update product details' : 'Add a new product to the catalogue'">—</p>
+        </div>
+        <a th:href="@{/admin/products}" class="adm-btn adm-btn--ghost">← Back to Products</a>
+    </div>
+
+    <div class="adm-form-card" style="max-width:700px;">
+
+        <div class="adm-form-error" th:if="${formError}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span th:text="${formError}"></span>
+        </div>
+
+        <!-- EDIT form -->
+        <form th:if="${isEdit}"
+              th:action="@{/admin/products/{id}/edit(id=${productId})}"
+              th:object="${productForm}" method="post" class="adm-form">
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="nameE">Product Name <span class="adm-required">*</span></label>
+                <input type="text" id="nameE" th:field="*{name}"
+                       th:classappend="${#fields.hasErrors('name')} ? ' adm-input--error'"
+                       class="adm-input" placeholder="e.g. iPhone 15 Pro" autofocus />
+                <span class="adm-field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="descE">Description <span class="adm-required">*</span></label>
+                <textarea id="descE" th:field="*{description}"
+                          th:classappend="${#fields.hasErrors('description')} ? ' adm-input--error'"
+                          class="adm-input" style="height:90px;padding-top:10px;resize:vertical;"
+                          placeholder="Brief product description (5–255 characters)"></textarea>
+                <span class="adm-field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+            </div>
+
+            <div class="adm-form-row">
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="catE">Category <span class="adm-required">*</span></label>
+                    <select id="catE" th:field="*{categoryId}"
+                            th:classappend="${#fields.hasErrors('categoryId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select category —</option>
+                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Cat</option>
+                    </select>
+                    <span class="adm-field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></span>
+                </div>
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="brandE">Brand <span class="adm-required">*</span></label>
+                    <select id="brandE" th:field="*{brandId}"
+                            th:classappend="${#fields.hasErrors('brandId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select brand —</option>
+                        <option th:each="b : ${brands}" th:value="${b.id}" th:text="${b.name}">Brand</option>
+                    </select>
+                    <span class="adm-field-error" th:if="${#fields.hasErrors('brandId')}" th:errors="*{brandId}"></span>
+                </div>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label">Status</label>
+                <div class="adm-toggle-group">
+                    <label class="adm-toggle-opt">
+                        <input type="radio" th:field="*{status}" th:value="${true}" />
+                        <span class="adm-toggle-label adm-toggle-label--green">Active</span>
+                    </label>
+                    <label class="adm-toggle-opt" th:classappend="${hasActiveStock} ? ' adm-toggle-opt--locked'">
+                        <input type="radio" th:field="*{status}" th:value="${false}" th:disabled="${hasActiveStock}" />
+                        <span class="adm-toggle-label adm-toggle-label--red">Inactive</span>
+                    </label>
+                </div>
+                <span th:if="${hasActiveStock}" class="adm-field-hint adm-field-hint--warn">
+                    Cannot deactivate — this product still has variants with available stock.
+                </span>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Save Changes
+                </button>
+                <a th:href="@{/admin/products}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+        </form>
+
+        <!-- CREATE form -->
+        <form th:unless="${isEdit}"
+              th:action="@{/admin/products/new}"
+              th:object="${productForm}" method="post" class="adm-form">
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="nameN">Product Name <span class="adm-required">*</span></label>
+                <input type="text" id="nameN" th:field="*{name}"
+                       th:classappend="${#fields.hasErrors('name')} ? ' adm-input--error'"
+                       class="adm-input" placeholder="e.g. iPhone 15 Pro" autofocus />
+                <span class="adm-field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="descN">Description <span class="adm-required">*</span></label>
+                <textarea id="descN" th:field="*{description}"
+                          th:classappend="${#fields.hasErrors('description')} ? ' adm-input--error'"
+                          class="adm-input" style="height:90px;padding-top:10px;resize:vertical;"
+                          placeholder="Brief product description (5–255 characters)"></textarea>
+                <span class="adm-field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+            </div>
+
+            <div class="adm-form-row">
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="catN">Category <span class="adm-required">*</span></label>
+                    <select id="catN" th:field="*{categoryId}"
+                            th:classappend="${#fields.hasErrors('categoryId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select category —</option>
+                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Cat</option>
+                    </select>
+                    <span class="adm-field-error" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></span>
+                </div>
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="brandN">Brand <span class="adm-required">*</span></label>
+                    <select id="brandN" th:field="*{brandId}"
+                            th:classappend="${#fields.hasErrors('brandId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select brand —</option>
+                        <option th:each="b : ${brands}" th:value="${b.id}" th:text="${b.name}">Brand</option>
+                    </select>
+                    <span class="adm-field-error" th:if="${#fields.hasErrors('brandId')}" th:errors="*{brandId}"></span>
+                </div>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label">Status</label>
+                <div class="adm-toggle-group">
+                    <label class="adm-toggle-opt">
+                        <input type="radio" th:field="*{status}" th:value="${true}" />
+                        <span class="adm-toggle-label adm-toggle-label--green">Active</span>
+                    </label>
+                    <label class="adm-toggle-opt">
+                        <input type="radio" th:field="*{status}" th:value="${false}" />
+                        <span class="adm-toggle-label adm-toggle-label--red">Inactive</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Create Product
+                </button>
+                <a th:href="@{/admin/products}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+</main>
+</body>
+</html>
