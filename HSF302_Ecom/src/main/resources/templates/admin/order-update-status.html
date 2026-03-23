@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Orders', ~{::main})}">
+<head>
+    <title>Order Detail — Voltex Admin</title>
+</head>
+<body>
+<main>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title">Order Detail</h1>
+            <p class="adm-page-sub">Review order information and update status</p>
+        </div>
+    </div>
+
+    <div th:if="${param.updated}" class="adm-alert adm-alert-success">
+        Order status updated successfully.
+    </div>
+
+    <div class="adm-grid-2">
+
+        <div class="adm-card">
+            <h3 class="adm-section-title">Order Information</h3>
+
+            <div class="adm-detail-list">
+                <div><strong>Order ID:</strong> <span th:text="${order.id}"></span></div>
+                <div><strong>Customer:</strong> <span th:text="${order.user.username}"></span></div>
+                <div><strong>Email:</strong> <span th:text="${order.user.email}"></span></div>
+                <div><strong>Phone:</strong> <span th:text="${order.user.phone}"></span></div>
+                <div><strong>Created At:</strong> <span th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></span></div>
+                <div><strong>Total Price:</strong> <span th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></div>
+                <div>
+                    <strong>Status:</strong>
+                    <span class="adm-badge"
+                          th:text="${order.status}"
+                          th:classappend="${
+                                order.status.name() == 'PENDING' ? ' adm-badge-warning' :
+                                order.status.name() == 'CONFIRMED' ? ' adm-badge-info' :
+                                order.status.name() == 'PROCESSING' ? ' adm-badge-orange' :
+                                order.status.name() == 'SHIPPED' ? ' adm-badge-primary' :
+                                order.status.name() == 'DELIVERED' ? ' adm-badge-success' :
+                                ' adm-badge-danger'
+                              }">
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="adm-card">
+            <h3 class="adm-section-title">Shipping Address</h3>
+
+            <div class="adm-detail-list">
+                <div><strong>Address:</strong> <span th:text="${order.shippingAddress}"></span></div>
+                <div><strong>District:</strong> <span th:text="${order.shippingDistrict}"></span></div>
+                <div><strong>City:</strong> <span th:text="${order.shippingCity}"></span></div>
+            </div>
+
+            <hr class="adm-divider">
+
+            <h3 class="adm-section-title">Update Status</h3>
+
+            <form th:action="@{/admin/orders/{id}/status(id=${order.id})}"
+                  th:object="${updateRequest}"
+                  method="post"
+                  class="adm-form-stack">
+
+                <select th:field="*{status}" onchange="this.form.submit()" class="adm-input">
+                    <option th:each="status : ${allStatuses}"
+                            th:value="${status}"
+                            th:text="${status}">
+                    </option>
+
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <div class="adm-card">
+        <h3 class="adm-section-title">Order Items</h3>
+
+        <div class="adm-table-wrap">
+            <table class="adm-table">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${order.orderItems}">
+                    <td th:text="${item.productName}"></td>
+                    <td th:text="${item.quantity}"></td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a th:href="@{/admin/orders}" class="adm-btn">← Back to Orders</a>
+
+</main>
+</body>
+</html>
