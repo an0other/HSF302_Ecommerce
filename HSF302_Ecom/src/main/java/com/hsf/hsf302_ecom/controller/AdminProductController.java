@@ -4,6 +4,7 @@ import com.hsf.hsf302_ecom.dto.admin.InventoryFormDTO;
 import com.hsf.hsf302_ecom.dto.admin.ProductFormDTO;
 import com.hsf.hsf302_ecom.dto.admin.VariantFormDTO;
 import com.hsf.hsf302_ecom.entity.Products;
+import com.hsf.hsf302_ecom.entity.ProductVariants;
 import com.hsf.hsf302_ecom.entity.Users;
 import com.hsf.hsf302_ecom.enums.UserRole;
 import com.hsf.hsf302_ecom.service.AdminProductService;
@@ -156,7 +157,7 @@ public class AdminProductController {
             ra.addFlashAttribute("toast",     err);
             ra.addFlashAttribute("toastType", "error");
         } else {
-            ra.addFlashAttribute("toast",     "Product deactivated successfully.");
+            ra.addFlashAttribute("toast",     "Product and all its variants deactivated successfully.");
             ra.addFlashAttribute("toastType", "success");
         }
         return "redirect:/admin/products";
@@ -303,6 +304,20 @@ public class AdminProductController {
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
+        // Look up the variant to check its active status
+        // We resolve via the variants list on the product
+        boolean variantActive = p.getProductVariants() != null && p.getProductVariants().stream()
+                .filter(v -> v.getId().equals(variantId))
+                .anyMatch(v -> Boolean.TRUE.equals(v.getStatus()));
+
+        boolean productActive = Boolean.TRUE.equals(p.getStatus());
+
+        // Pass lock flags to the template
+        model.addAttribute("inventoryLocked",       !variantActive || !productActive);
+        model.addAttribute("inventoryLockedReason",
+                !productActive ? "The parent product is inactive. Activate the product first."
+                        : "This variant is inactive. Activate the variant before updating inventory.");
+
         model.addAttribute("inventoryForm", productService.getInventoryFormForVariant(variantId));
         model.addAttribute("variantId",     variantId);
         model.addAttribute("product",       p);
@@ -338,6 +353,15 @@ public class AdminProductController {
             model.addAttribute("product",   p);
             model.addAttribute("section",   "products");
             model.addAttribute("stage",     "inventory");
+            // Re-populate lock state so the template renders correctly
+            boolean variantActive = p.getProductVariants() != null && p.getProductVariants().stream()
+                    .filter(v -> v.getId().equals(variantId))
+                    .anyMatch(v -> Boolean.TRUE.equals(v.getStatus()));
+            boolean productActive = Boolean.TRUE.equals(p.getStatus());
+            model.addAttribute("inventoryLocked",       !variantActive || !productActive);
+            model.addAttribute("inventoryLockedReason",
+                    !productActive ? "The parent product is inactive. Activate the product first."
+                            : "This variant is inactive. Activate the variant before updating inventory.");
             return "admin/product-inventory-form";
         }
         return "redirect:/admin/products/" + productId + "/variants";

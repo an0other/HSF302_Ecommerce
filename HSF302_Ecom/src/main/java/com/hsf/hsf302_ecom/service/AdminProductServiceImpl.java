@@ -115,13 +115,12 @@ public class AdminProductServiceImpl implements AdminProductService {
         if (productsRepo.existsByNameIgnoreCaseAndIdNot(form.getName(), id))
             return "A product with this name already exists.";
 
-        if (!Boolean.TRUE.equals(form.getStatus()) && productHasActiveStock(id))
-            return "Cannot deactivate — product still has variants with stock in inventory.";
-
         Categories cat = categoriesRepo.findById(form.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
         Brands brand = brandsRepo.findById(form.getBrandId())
                 .orElseThrow(() -> new IllegalArgumentException("Brand not found"));
+
+        boolean deactivating = !Boolean.TRUE.equals(form.getStatus()) && Boolean.TRUE.equals(p.getStatus());
 
         p.setName(form.getName().trim());
         p.setDescription(form.getDescription().trim());
@@ -129,18 +128,38 @@ public class AdminProductServiceImpl implements AdminProductService {
         p.setBrand(brand);
         p.setStatus(Boolean.TRUE.equals(form.getStatus()));
         productsRepo.save(p);
+
+        // When deactivating a product, also deactivate ALL its variants
+        if (deactivating && p.getProductVariants() != null) {
+            for (ProductVariants v : p.getProductVariants()) {
+                if (Boolean.TRUE.equals(v.getStatus())) {
+                    v.setStatus(false);
+                    variantsRepo.save(v);
+                }
+            }
+        }
+
         return null;
     }
 
     @Override
     @Transactional
     public String softDeleteProduct(Long id) {
-        if (productHasActiveStock(id))
-            return "Cannot deactivate — product still has variants with available stock.";
         Products p = productsRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         p.setStatus(false);
         productsRepo.save(p);
+
+        // Also deactivate all variants when product is deactivated
+        if (p.getProductVariants() != null) {
+            for (ProductVariants v : p.getProductVariants()) {
+                if (Boolean.TRUE.equals(v.getStatus())) {
+                    v.setStatus(false);
+                    variantsRepo.save(v);
+                }
+            }
+        }
+
         return null;
     }
 
@@ -282,11 +301,17 @@ public class AdminProductServiceImpl implements AdminProductService {
     @Override
     @Transactional
     public void createOrUpdateInventory(Long variantId, InventoryFormDTO form) {
-        if (form.getReserved() > form.getStock())
-            throw new IllegalArgumentException("Reserved cannot exceed stock.");
-
         ProductVariants v = variantsRepo.findById(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Variant not found"));
+        if (!Boolean.TRUE.equals(v.getStatus())) {
+            throw new IllegalStateException("Cannot update inventory for an inactive variant.");
+        }
+        if (v.getProduct() != null && !Boolean.TRUE.equals(v.getProduct().getStatus())) {
+            throw new IllegalStateException("Cannot update inventory because the product is inactive.");
+        }
+
+        if (form.getReserved() > form.getStock())
+            throw new IllegalArgumentException("Reserved cannot exceed stock.");
 
         Inventories inv = inventoriesRepo.findByProductVariantId(variantId)
                 .orElseGet(() -> Inventories.builder().productVariant(v).build());
