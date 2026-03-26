@@ -25,6 +25,43 @@ public class AdminServiceImpl implements AdminService {
     private final OrdersRepo          ordersRepo;
     private final UsersRepo           usersRepo;
 
+    private long availableStock(Long variantId) {
+        Long val = inventoriesRepo.findAvailableStock(variantId);
+        return val != null ? val : 0L;
+    }
+
+    private void autoActivateIfRestocked(ProductVariants v, long newAvailable) {
+        if (newAvailable > 0) {
+            if (!Boolean.TRUE.equals(v.getStatus())) {
+                v.setStatus(true);
+                variantsRepo.save(v);
+            }
+            Products p = v.getProduct();
+            if (p != null && !Boolean.TRUE.equals(p.getStatus())) {
+                p.setStatus(true);
+                productsRepo.save(p);
+            }
+        }
+    }
+
+    private void autoDeactivateIfDepleted(ProductVariants v, long newStock) {
+        if (newStock <= 0) {
+            if (Boolean.TRUE.equals(v.getStatus())) {
+                v.setStatus(false);
+                variantsRepo.save(v);
+            }
+            Products p = v.getProduct();
+            if (p != null && Boolean.TRUE.equals(p.getStatus())) {
+                boolean anyOtherActive =
+                        variantsRepo.existsOtherActiveVariant(p.getId(), v.getId());
+                if (!anyOtherActive) {
+                    p.setStatus(false);
+                    productsRepo.save(p);
+                }
+            }
+        }
+    }
+
     @Override
     public DashboardStatsDTO getDashboardStats() {
         return DashboardStatsDTO.builder()
@@ -75,7 +112,9 @@ public class AdminServiceImpl implements AdminService {
         if (brandsRepo.existsByNameIgnoreCaseAndIdNot(form.getName(), id))
             return "A brand with this name already exists.";
         if (!Boolean.TRUE.equals(form.getStatus()) && brandHasInventory(id))
-            return "Cannot deactivate \"" + brand.getName() + "\" — it still has products with stock in inventory. Please clear all inventory first.";
+            return "Cannot deactivate \"" + brand.getName()
+                    + "\" — it still has products with stock in inventory. "
+                    + "Please clear all inventory first.";
         brand.setName(form.getName().trim());
         brand.setStatus(Boolean.TRUE.equals(form.getStatus()));
         brandsRepo.save(brand);
@@ -90,7 +129,8 @@ public class AdminServiceImpl implements AdminService {
         for (Products product : brand.getProducts()) {
             if (product.getProductVariants() == null) continue;
             for (ProductVariants variant : product.getProductVariants()) {
-                Inventories inv = inventoriesRepo.findByProductVariantId(variant.getId()).orElse(null);
+                Inventories inv =
+                        inventoriesRepo.findByProductVariantId(variant.getId()).orElse(null);
                 if (inv != null && inv.getStock() > 0) return true;
             }
         }
@@ -136,7 +176,9 @@ public class AdminServiceImpl implements AdminService {
         if (categoriesRepo.existsByNameIgnoreCaseAndIdNot(form.getName(), id))
             return "A category with this name already exists.";
         if (!Boolean.TRUE.equals(form.getStatus()) && categoryHasInventory(id))
-            return "Cannot deactivate \"" + cat.getName() + "\" — it still has products with stock in inventory. Please clear all inventory first.";
+            return "Cannot deactivate \"" + cat.getName()
+                    + "\" — it still has products with stock in inventory. "
+                    + "Please clear all inventory first.";
         cat.setName(form.getName().trim());
         cat.setStatus(Boolean.TRUE.equals(form.getStatus()));
         categoriesRepo.save(cat);
@@ -151,7 +193,8 @@ public class AdminServiceImpl implements AdminService {
         for (Products product : cat.getProducts()) {
             if (product.getProductVariants() == null) continue;
             for (ProductVariants variant : product.getProductVariants()) {
-                Inventories inv = inventoriesRepo.findByProductVariantId(variant.getId()).orElse(null);
+                Inventories inv =
+                        inventoriesRepo.findByProductVariantId(variant.getId()).orElse(null);
                 if (inv != null && inv.getStock() > 0) return true;
             }
         }
@@ -164,15 +207,16 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Page<InventoryRowDTO> getInventories(String keyword, Long categoryId, Long brandId, Pageable pageable) {
+    public Page<InventoryRowDTO> getInventories(String keyword, Long categoryId,
+                                                Long brandId, Pageable pageable) {
         String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
-
-        Page<Inventories> page = inventoriesRepo.findByFilters(kw, categoryId, brandId, pageable);
+        Page<Inventories> page =
+                inventoriesRepo.findByFilters(kw, categoryId, brandId, pageable);
 
         List<InventoryRowDTO> rows = page.getContent().stream()
                 .map(inv -> {
                     ProductVariants v = inv.getProductVariant();
-                    Products p = v.getProduct();
+                    Products        p = v.getProduct();
                     long avail = Math.max(0, inv.getStock() - inv.getReserved());
                     return InventoryRowDTO.builder()
                             .variantId(v.getId())
@@ -193,16 +237,13 @@ public class AdminServiceImpl implements AdminService {
         return new PageImpl<>(rows, pageable, page.getTotalElements());
     }
 
-    private int stockOrder(String s) {
-        return switch (s) { case "OUT" -> 0; case "LOW" -> 1; default -> 2; };
-    }
-
     @Override
     public InventoryFormDTO getInventoryForm(Long variantId) {
         ProductVariants v = variantsRepo.findById(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Variant not found"));
         Inventories inv = inventoriesRepo.findByProductVariantId(variantId)
-                .orElseThrow(() -> new IllegalArgumentException("Inventory not found for variant " + variantId));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Inventory not found for variant " + variantId));
         InventoryFormDTO form = new InventoryFormDTO();
         form.setProductName(v.getProduct() != null ? v.getProduct().getName() : "—");
         form.setVariantLabel(v.getColor() + " / " + v.getSpec());
@@ -220,9 +261,20 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("Inventory not found"));
         if (form.getReserved() > form.getStock())
             throw new IllegalArgumentException("Reserved cannot exceed stock.");
-        inv.setStock(form.getStock());
-        inv.setReserved(form.getReserved());
+
+        ProductVariants v = inv.getProductVariant();
+
+        long newStock     = form.getStock();
+        long newReserved  = form.getReserved();
+        long newAvailable = Math.max(0, newStock - newReserved);
+
+        inv.setStock(newStock);
+        inv.setReserved(newReserved);
         inventoriesRepo.save(inv);
+
+        autoActivateIfRestocked(v, newAvailable);
+
+        autoDeactivateIfDepleted(v, newStock);
     }
 
     @Override
@@ -232,8 +284,16 @@ public class AdminServiceImpl implements AdminService {
             throw new IllegalArgumentException("Amount must be positive.");
         Inventories inv = inventoriesRepo.findByProductVariantId(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Inventory not found"));
-        inv.setStock(inv.getStock() + amount);
+
+        ProductVariants v = inv.getProductVariant();
+
+        long newStock     = inv.getStock() + amount;
+        long newAvailable = Math.max(0, newStock - inv.getReserved());
+
+        inv.setStock(newStock);
         inventoriesRepo.save(inv);
+
+        autoActivateIfRestocked(v, newAvailable);
     }
 
     @Override
@@ -249,14 +309,14 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Orders getOrderById(Long id) {
         return ordersRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+                .orElseThrow(() -> new RuntimeException("Order not found"));
     }
-    @Transactional
+
     @Override
+    @Transactional
     public void updateOrderStatus(Long orderId, OrderStatus status) {
         Orders order = ordersRepo.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
-
+                .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(status);
         ordersRepo.save(order);
     }

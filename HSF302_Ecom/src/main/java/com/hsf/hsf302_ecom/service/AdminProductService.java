@@ -9,6 +9,7 @@ import com.hsf.hsf302_ecom.entity.Products;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AdminProductService {
@@ -21,12 +22,15 @@ public interface AdminProductService {
     String              softDeleteProduct(Long id);
     boolean             productHasActiveStock(Long id);
 
-    java.util.List<VariantRowDTO> getVariantsForProduct(Long productId);
-    VariantFormDTO  getVariantForm(Long variantId);
-    String          createVariant(Long productId, VariantFormDTO form);
-    String          updateVariant(Long variantId, VariantFormDTO form);
-    String          softDeleteVariant(Long variantId);
-    boolean         variantHasActiveStock(Long variantId);
+    List<VariantRowDTO> getVariantsForProduct(Long productId);
+    VariantFormDTO      getVariantForm(Long variantId);
+    String              createVariant(Long productId, VariantFormDTO form);
+    String              updateVariant(Long variantId, VariantFormDTO form);
+    String              softDeleteVariant(Long variantId);
+    boolean             variantHasActiveStock(Long variantId);
+
+    /** Returns stock − reserved for a variant (never negative). */
+    long                getAvailableStockForVariant(Long variantId);
 
     InventoryFormDTO getInventoryFormForVariant(Long variantId);
     void             createOrUpdateInventory(Long variantId, InventoryFormDTO form);

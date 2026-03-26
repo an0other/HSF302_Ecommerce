@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InventoryFormDTO {
 
-    // Display-only fields (not bound from form, set by service)
     private String productName;
     private String variantLabel;
     private String color;

@@ -4,7 +4,6 @@ import com.hsf.hsf302_ecom.dto.admin.InventoryFormDTO;
 import com.hsf.hsf302_ecom.dto.admin.ProductFormDTO;
 import com.hsf.hsf302_ecom.dto.admin.VariantFormDTO;
 import com.hsf.hsf302_ecom.entity.Products;
-import com.hsf.hsf302_ecom.entity.ProductVariants;
 import com.hsf.hsf302_ecom.entity.Users;
 import com.hsf.hsf302_ecom.enums.UserRole;
 import com.hsf.hsf302_ecom.service.AdminProductService;
@@ -42,7 +41,6 @@ public class AdminProductController {
                               @RequestParam(required = false) Long categoryId,
                               @RequestParam(required = false) Long brandId) {
         if (requireAdmin(session) == null) return "redirect:/login";
-
         model.addAttribute("productPage",  productService.getProducts(keyword, categoryId, brandId, PageRequest.of(page, 12)));
         model.addAttribute("categories",   adminService.getAllCategories());
         model.addAttribute("brands",       adminService.getAllBrands());
@@ -51,7 +49,7 @@ public class AdminProductController {
         model.addAttribute("brandId",      brandId);
         model.addAttribute("currentPage",  page);
         model.addAttribute("section",      "products");
-        model.addAttribute("stage", "products");
+        model.addAttribute("stage",        "products");
         return "admin/products";
     }
 
@@ -90,8 +88,8 @@ public class AdminProductController {
             model.addAttribute("stage",   "products");
             return "admin/product-form";
         }
-        ra.addFlashAttribute("toast",     "Product \"" + form.getName() + "\" created successfully.");
-        ra.addFlashAttribute("toastType", "success");
+        ra.addFlashAttribute("toast",     "Product \"" + form.getName() + "\" created. Add variants and stock to activate it.");
+        ra.addFlashAttribute("toastType", "info");
         return "redirect:/admin/products";
     }
 
@@ -157,7 +155,7 @@ public class AdminProductController {
             ra.addFlashAttribute("toast",     err);
             ra.addFlashAttribute("toastType", "error");
         } else {
-            ra.addFlashAttribute("toast",     "Product and all its variants deactivated successfully.");
+            ra.addFlashAttribute("toast",     "Product and all its variants deactivated.");
             ra.addFlashAttribute("toastType", "success");
         }
         return "redirect:/admin/products";
@@ -169,11 +167,10 @@ public class AdminProductController {
         if (requireAdmin(session) == null) return "redirect:/login";
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-
-        model.addAttribute("product",   p);
-        model.addAttribute("variants",  productService.getVariantsForProduct(productId));
-        model.addAttribute("section",   "products");
-        model.addAttribute("stage",     "variants");
+        model.addAttribute("product",  p);
+        model.addAttribute("variants", productService.getVariantsForProduct(productId));
+        model.addAttribute("section",  "products");
+        model.addAttribute("stage",    "variants");
         return "admin/variants";
     }
 
@@ -183,10 +180,8 @@ public class AdminProductController {
         if (requireAdmin(session) == null) return "redirect:/login";
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-
         VariantFormDTO form = new VariantFormDTO();
         form.setProductName(p.getName());
-
         model.addAttribute("variantForm", form);
         model.addAttribute("product",     p);
         model.addAttribute("isEdit",  false);
@@ -204,7 +199,6 @@ public class AdminProductController {
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         form.setProductName(p.getName());
-
         if (br.hasErrors()) {
             model.addAttribute("product", p);
             model.addAttribute("isEdit",  false);
@@ -221,8 +215,8 @@ public class AdminProductController {
             model.addAttribute("stage",     "variants");
             return "admin/variant-form";
         }
-        ra.addFlashAttribute("toast",     "Variant created successfully.");
-        ra.addFlashAttribute("toastType", "success");
+        ra.addFlashAttribute("toast",     "Variant created. Go to Inventory to add stock and activate it.");
+        ra.addFlashAttribute("toastType", "info");
         return "redirect:/admin/products/" + productId + "/variants";
     }
 
@@ -234,10 +228,20 @@ public class AdminProductController {
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
-        model.addAttribute("variantForm",    productService.getVariantForm(variantId));
-        model.addAttribute("variantId",      variantId);
-        model.addAttribute("product",        p);
-        model.addAttribute("hasActiveStock", productService.variantHasActiveStock(variantId));
+        long avail = productService.getAvailableStockForVariant(variantId);
+        boolean productActive = Boolean.TRUE.equals(p.getStatus());
+
+        String activateBlockReason = null;
+        if (avail <= 0)
+            activateBlockReason = "Cannot activate — no available stock (stock − reserved must be > 0). Add inventory first.";
+        else if (!productActive)
+            activateBlockReason = "Cannot activate — the parent product is inactive. Add stock via Inventory (auto-activates both), or activate the product first.";
+
+        model.addAttribute("variantForm",          productService.getVariantForm(variantId));
+        model.addAttribute("variantId",            variantId);
+        model.addAttribute("product",              p);
+        model.addAttribute("hasActiveStock",       productService.variantHasActiveStock(variantId));
+        model.addAttribute("activateBlockReason",  activateBlockReason);
         model.addAttribute("isEdit",  true);
         model.addAttribute("section", "products");
         model.addAttribute("stage",   "variants");
@@ -254,11 +258,18 @@ public class AdminProductController {
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         form.setProductName(p.getName());
-
         if (br.hasErrors()) {
-            model.addAttribute("variantId",      variantId);
-            model.addAttribute("product",        p);
-            model.addAttribute("hasActiveStock", productService.variantHasActiveStock(variantId));
+            long avail = productService.getAvailableStockForVariant(variantId);
+            boolean productActive = Boolean.TRUE.equals(p.getStatus());
+            String activateBlockReason = null;
+            if (avail <= 0)
+                activateBlockReason = "Cannot activate — no available stock (stock − reserved must be > 0). Add inventory first.";
+            else if (!productActive)
+                activateBlockReason = "Cannot activate — the parent product is inactive.";
+            model.addAttribute("variantId",           variantId);
+            model.addAttribute("product",             p);
+            model.addAttribute("hasActiveStock",      productService.variantHasActiveStock(variantId));
+            model.addAttribute("activateBlockReason", activateBlockReason);
             model.addAttribute("isEdit",  true);
             model.addAttribute("section", "products");
             model.addAttribute("stage",   "variants");
@@ -266,10 +277,18 @@ public class AdminProductController {
         }
         String err = productService.updateVariant(variantId, form);
         if (err != null) {
-            model.addAttribute("formError",      err);
-            model.addAttribute("variantId",      variantId);
-            model.addAttribute("product",        p);
-            model.addAttribute("hasActiveStock", productService.variantHasActiveStock(variantId));
+            long avail = productService.getAvailableStockForVariant(variantId);
+            boolean productActive = Boolean.TRUE.equals(p.getStatus());
+            String activateBlockReason = null;
+            if (avail <= 0)
+                activateBlockReason = "Cannot activate — no available stock (stock − reserved must be > 0). Add inventory first.";
+            else if (!productActive)
+                activateBlockReason = "Cannot activate — the parent product is inactive.";
+            model.addAttribute("formError",           err);
+            model.addAttribute("variantId",           variantId);
+            model.addAttribute("product",             p);
+            model.addAttribute("hasActiveStock",      productService.variantHasActiveStock(variantId));
+            model.addAttribute("activateBlockReason", activateBlockReason);
             model.addAttribute("isEdit",  true);
             model.addAttribute("section", "products");
             model.addAttribute("stage",   "variants");
@@ -304,20 +323,21 @@ public class AdminProductController {
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
-        // Look up the variant to check its active status
-        // We resolve via the variants list on the product
-        boolean variantActive = p.getProductVariants() != null && p.getProductVariants().stream()
-                .filter(v -> v.getId().equals(variantId))
-                .anyMatch(v -> Boolean.TRUE.equals(v.getStatus()));
-
+        boolean variantActive = Boolean.FALSE.equals(
+                productService.getVariantForm(variantId).getStatus()) ? false : true;
         boolean productActive = Boolean.TRUE.equals(p.getStatus());
 
-        // Pass lock flags to the template
-        model.addAttribute("inventoryLocked",       !variantActive || !productActive);
-        model.addAttribute("inventoryLockedReason",
-                !productActive ? "The parent product is inactive. Activate the product first."
-                        : "This variant is inactive. Activate the variant before updating inventory.");
+        String statusNote = null;
+        if (!variantActive && !productActive)
+            statusNote = "Both the variant and the product are inactive. "
+                    + "Adding stock will automatically activate them.";
+        else if (!variantActive)
+            statusNote = "This variant is inactive. Adding stock will automatically activate it.";
+        else if (!productActive)
+            statusNote = "The parent product is inactive. "
+                    + "Adding stock will automatically activate the product too.";
 
+        model.addAttribute("statusNote",    statusNote);
         model.addAttribute("inventoryForm", productService.getInventoryFormForVariant(variantId));
         model.addAttribute("variantId",     variantId);
         model.addAttribute("product",       p);
@@ -335,7 +355,6 @@ public class AdminProductController {
         if (requireAdmin(session) == null) return "redirect:/login";
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-
         if (br.hasErrors()) {
             model.addAttribute("variantId", variantId);
             model.addAttribute("product",   p);
@@ -353,15 +372,6 @@ public class AdminProductController {
             model.addAttribute("product",   p);
             model.addAttribute("section",   "products");
             model.addAttribute("stage",     "inventory");
-            // Re-populate lock state so the template renders correctly
-            boolean variantActive = p.getProductVariants() != null && p.getProductVariants().stream()
-                    .filter(v -> v.getId().equals(variantId))
-                    .anyMatch(v -> Boolean.TRUE.equals(v.getStatus()));
-            boolean productActive = Boolean.TRUE.equals(p.getStatus());
-            model.addAttribute("inventoryLocked",       !variantActive || !productActive);
-            model.addAttribute("inventoryLockedReason",
-                    !productActive ? "The parent product is inactive. Activate the product first."
-                            : "This variant is inactive. Activate the variant before updating inventory.");
             return "admin/product-inventory-form";
         }
         return "redirect:/admin/products/" + productId + "/variants";

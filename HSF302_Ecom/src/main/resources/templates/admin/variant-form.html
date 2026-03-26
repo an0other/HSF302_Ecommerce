@@ -13,19 +13,27 @@
     <div class="adm-page-header">
         <div>
             <h1 class="adm-page-title" th:text="${isEdit} ? 'Edit Variant' : 'New Variant'">Variant</h1>
-            <p class="adm-page-sub" th:text="${isEdit} ? 'Update variant details' : 'Add a new variant for ' + ${product.name}">—</p>
+            <p class="adm-page-sub"
+               th:text="${isEdit} ? 'Update variant details' : 'Add a new variant for ' + ${product.name}">—</p>
         </div>
-        <a th:href="@{/admin/products/{id}/variants(id=${product.id})}" class="adm-btn adm-btn--ghost">← Back to Variants</a>
+        <a th:href="@{/admin/products/{id}/variants(id=${product.id})}"
+           class="adm-btn adm-btn--ghost">← Back to Variants</a>
     </div>
 
     <div class="adm-form-card" style="max-width:560px;">
 
         <div class="adm-form-error" th:if="${formError}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
             <span th:text="${formError}"></span>
         </div>
 
-        <!-- EDIT form -->
+        <!-- ══════════════════════════════════════════════════════
+             EDIT form
+        ══════════════════════════════════════════════════════ -->
         <form th:if="${isEdit}"
               th:action="@{/admin/products/{pid}/variants/{vid}/edit(pid=${product.id},vid=${variantId})}"
               th:object="${variantForm}" method="post" class="adm-form">
@@ -55,33 +63,64 @@
                 <span class="adm-field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></span>
             </div>
 
+            <!-- Status toggle with conditional lock/hint -->
             <div class="adm-form-field">
                 <label class="adm-form-label">Status</label>
                 <div class="adm-toggle-group">
-                    <label class="adm-toggle-opt">
-                        <input type="radio" th:field="*{status}" th:value="${true}" />
+
+                    <!-- Active option: locked when activateBlockReason is set -->
+                    <label class="adm-toggle-opt"
+                           th:classappend="${activateBlockReason != null} ? ' adm-toggle-opt--locked'">
+                        <input type="radio" th:field="*{status}" th:value="${true}"
+                               th:disabled="${activateBlockReason != null}" />
                         <span class="adm-toggle-label adm-toggle-label--green">Active</span>
                     </label>
-                    <label class="adm-toggle-opt" th:classappend="${hasActiveStock} ? ' adm-toggle-opt--locked'">
-                        <input type="radio" th:field="*{status}" th:value="${false}" th:disabled="${hasActiveStock}" />
+
+                    <!-- Inactive option: locked when variant has active stock -->
+                    <label class="adm-toggle-opt"
+                           th:classappend="${hasActiveStock} ? ' adm-toggle-opt--locked'">
+                        <input type="radio" th:field="*{status}" th:value="${false}"
+                               th:disabled="${hasActiveStock}" />
                         <span class="adm-toggle-label adm-toggle-label--red">Inactive</span>
                     </label>
                 </div>
-                <span th:if="${hasActiveStock}" class="adm-field-hint adm-field-hint--warn">
-                    Cannot deactivate — this variant still has available stock in inventory.
+
+                <!-- Why "Active" is locked -->
+                <span th:if="${activateBlockReason != null}"
+                      class="adm-field-hint adm-field-hint--warn"
+                      th:text="${activateBlockReason}"></span>
+
+                <!-- Why "Inactive" is locked -->
+                <span th:if="${hasActiveStock and activateBlockReason == null}"
+                      class="adm-field-hint adm-field-hint--warn">
+                    Cannot deactivate — this variant still has stock in inventory.
+                </span>
+
+                <!-- Normal hint: auto-activates when stock added -->
+                <span th:if="${activateBlockReason == null and !hasActiveStock}"
+                      class="adm-field-hint">
+                    Activation is managed automatically through inventory. Adding stock (stock − reserved &gt; 0) activates the variant; stock reaching 0 deactivates it.
                 </span>
             </div>
 
             <div class="adm-form-actions">
                 <button type="submit" class="adm-btn adm-btn--primary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     Save Changes
                 </button>
-                <a th:href="@{/admin/products/{id}/variants(id=${product.id})}" class="adm-btn adm-btn--ghost">Cancel</a>
+                <a th:href="@{/admin/products/{id}/variants(id=${product.id})}"
+                   class="adm-btn adm-btn--ghost">Cancel</a>
             </div>
         </form>
 
-        <!-- CREATE form -->
+        <!-- ══════════════════════════════════════════════════════
+             CREATE form
+             Note: new variants are always created inactive;
+             the Status toggle is hidden to avoid confusion.
+        ══════════════════════════════════════════════════════ -->
         <form th:unless="${isEdit}"
               th:action="@{/admin/products/{id}/variants/new(id=${product.id})}"
               th:object="${variantForm}" method="post" class="adm-form">
@@ -111,26 +150,33 @@
                 <span class="adm-field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></span>
             </div>
 
-            <div class="adm-form-field">
-                <label class="adm-form-label">Status</label>
-                <div class="adm-toggle-group">
-                    <label class="adm-toggle-opt">
-                        <input type="radio" th:field="*{status}" th:value="${true}" />
-                        <span class="adm-toggle-label adm-toggle-label--green">Active</span>
-                    </label>
-                    <label class="adm-toggle-opt">
-                        <input type="radio" th:field="*{status}" th:value="${false}" />
-                        <span class="adm-toggle-label adm-toggle-label--red">Inactive</span>
-                    </label>
-                </div>
+            <!-- Info banner: new variants start inactive -->
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;
+                        background:var(--adm-blue-bg);border:1.5px solid rgba(37,99,235,.2);
+                        border-radius:var(--radius-sm);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="var(--adm-blue)" stroke-width="2.2" stroke-linecap="round"
+                     stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span style="font-size:12.5px;color:var(--adm-blue);line-height:1.5;">
+                    New variants start as <strong>Inactive</strong> and are automatically activated
+                    once you add stock via the <strong>Inventory</strong> button
+                    (when stock − reserved &gt; 0).
+                </span>
             </div>
 
             <div class="adm-form-actions">
                 <button type="submit" class="adm-btn adm-btn--primary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
                     Create Variant
                 </button>
-                <a th:href="@{/admin/products/{id}/variants(id=${product.id})}" class="adm-btn adm-btn--ghost">Cancel</a>
+                <a th:href="@{/admin/products/{id}/variants(id=${product.id})}"
+                   class="adm-btn adm-btn--ghost">Cancel</a>
             </div>
         </form>
     </div>
