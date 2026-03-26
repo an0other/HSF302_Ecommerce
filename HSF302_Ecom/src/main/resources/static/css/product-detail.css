@@ -218,12 +218,10 @@
     color: var(--clr-text-muted);
 }
 .pd-price {
-    font-family: var(--font-display);
-    font-size: clamp(28px, 3.5vw, 40px);
-    font-weight: 800;
-    letter-spacing: -.04em;
+    font-size: clamp(20px, 2.5vw, 26px);
+    font-weight: 700;
     color: var(--clr-accent);
-    line-height: 1;
+    line-height: 1.2;
     transition: all var(--duration-normal) var(--ease-out);
 }
 .pd-price-per {
@@ -360,10 +358,9 @@
 .pd-spec-opt.pd-opt--selected .pd-spec-name { color: var(--clr-accent); }
 
 .pd-spec-price {
-    font-family: var(--font-display);
     font-size: 13px;
-    font-weight: 700;
-    color: var(--clr-text-secondary);
+    font-weight: 600;
+    color: var(--clr-accent);
 }
 .pd-spec-opt.pd-opt--selected .pd-spec-price { color: var(--clr-accent); }
 
