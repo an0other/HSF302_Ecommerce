@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Optional;
 
 @Controller
-public class AuthController {
+public class  AuthController {
 
     private static final String SK_USER          = "loggedInUser";
     private static final String SK_PENDING_ID    = "_pendingUserId";

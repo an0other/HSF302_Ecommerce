@@ -253,11 +253,20 @@ public class AdminServiceImpl implements AdminService {
     }
     @Transactional
     @Override
-    public void updateOrderStatus(Long orderId, OrderStatus status) {
+    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Orders order = ordersRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
 
-        order.setStatus(status);
+        OrderStatus currentStatus = order.getStatus();
+
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new RuntimeException(
+                    "Chuyển đổi trạng thái không hợp lệ: " + currentStatus + " → " + newStatus
+            );
+        }
+
+        order.setStatus(newStatus);
         ordersRepo.save(order);
     }
+
 }

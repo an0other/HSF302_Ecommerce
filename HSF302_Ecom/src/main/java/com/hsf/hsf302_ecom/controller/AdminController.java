@@ -309,9 +309,10 @@ public class AdminController {
         req.setStatus(order.getStatus());
 
         model.addAttribute("order", order);
-        model.addAttribute("allStatuses", Arrays.asList(OrderStatus.values()));
+        model.addAttribute("nextStatuses", order.getStatus().nextStatuses());
         model.addAttribute("updateRequest", req);
         model.addAttribute("section", "orders");
+
         return "admin/order-update-status";
     }
 
