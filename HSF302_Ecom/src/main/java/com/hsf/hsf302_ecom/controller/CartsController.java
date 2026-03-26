@@ -2,6 +2,7 @@ package com.hsf.hsf302_ecom.controller;
 
 import com.hsf.hsf302_ecom.dto.CartItemDTO;
 import com.hsf.hsf302_ecom.entity.Users;
+import com.hsf.hsf302_ecom.enums.UserRole;
 import com.hsf.hsf302_ecom.service.CartsService;
 import com.hsf.hsf302_ecom.service.HomeService;
 import jakarta.servlet.http.HttpSession;
@@ -33,6 +34,8 @@ public class CartsController {
     @GetMapping("/cart")
     public String cartPage(HttpSession session, Model model) {
         Users user = currentUser(session);
+
+        if (user != null && user.getRole() == UserRole.ADMIN) return "redirect:/admin";
 
         if (user == null) {
             model.addAttribute("categories", homeService.getActiveCategories());
@@ -67,6 +70,10 @@ public class CartsController {
             return ResponseEntity.status(401)
                     .body(Map.of("success", false, "message", "Please sign in to add items to your cart."));
         }
+        if (user.getRole() == UserRole.ADMIN) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("success", false, "message", "Admins cannot place orders."));
+        }
 
         try {
             cartsService.addToCart(user.getId(), variantId, qty);
@@ -93,6 +100,7 @@ public class CartsController {
 
         Users user = currentUser(session);
         if (user == null) return ResponseEntity.status(401).body(Map.of("success", false));
+        if (user.getRole() == UserRole.ADMIN) return ResponseEntity.status(403).body(Map.of("success", false, "message", "Admins cannot place orders."));
 
         try {
             cartsService.updateQuantity(user.getId(), cartItemId, qty);
@@ -120,7 +128,6 @@ public class CartsController {
         }
     }
 
-
     @PostMapping("/cart/remove")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> removeItem(
@@ -129,6 +136,7 @@ public class CartsController {
 
         Users user = currentUser(session);
         if (user == null) return ResponseEntity.status(401).body(Map.of("success", false));
+        if (user.getRole() == UserRole.ADMIN) return ResponseEntity.status(403).body(Map.of("success", false, "message", "Admins cannot place orders."));
 
         try {
             cartsService.removeItem(user.getId(), cartItemId);
@@ -150,6 +158,7 @@ public class CartsController {
     @PostMapping("/cart/clear")
     public String clearCart(HttpSession session, RedirectAttributes ra) {
         Users user = currentUser(session);
+        if (user != null && user.getRole() == UserRole.ADMIN) return "redirect:/admin";
         if (user != null) {
             cartsService.clearCart(user.getId());
             ra.addFlashAttribute("toast", "Your cart has been cleared.");

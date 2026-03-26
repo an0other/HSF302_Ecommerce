@@ -3,6 +3,7 @@ package com.hsf.hsf302_ecom.controller;
 import com.hsf.hsf302_ecom.dto.CheckoutRequestDTO;
 import com.hsf.hsf302_ecom.dto.CheckoutSummaryDTO;
 import com.hsf.hsf302_ecom.entity.Users;
+import com.hsf.hsf302_ecom.enums.UserRole;
 import com.hsf.hsf302_ecom.service.CheckoutService;
 import com.hsf.hsf302_ecom.service.HomeService;
 import jakarta.servlet.http.HttpSession;
@@ -35,15 +36,16 @@ public class CheckoutController {
     public String checkoutPage(HttpSession session, Model model) {
         Users user = currentUser(session);
         if (user == null) return "redirect:/login";
+        if (user.getRole() == UserRole.ADMIN) return "redirect:/admin";
 
         CheckoutSummaryDTO summary = checkoutService.getCheckoutSummary(user.getId());
         if (summary.isCartEmpty()) {
             return "redirect:/cart";
         }
 
-        model.addAttribute("summary",             summary);
-        model.addAttribute("checkoutRequest",     new CheckoutRequestDTO());
-        model.addAttribute("categories",          homeService.getActiveCategories());
+        model.addAttribute("summary",         summary);
+        model.addAttribute("checkoutRequest", new CheckoutRequestDTO());
+        model.addAttribute("categories",      homeService.getActiveCategories());
         return "checkout";
     }
 
@@ -56,11 +58,12 @@ public class CheckoutController {
 
         Users user = currentUser(session);
         if (user == null) return "redirect:/login";
+        if (user.getRole() == UserRole.ADMIN) return "redirect:/admin";
 
         if (bindingResult.hasErrors()) {
             CheckoutSummaryDTO summary = checkoutService.getCheckoutSummary(user.getId());
-            model.addAttribute("summary",     summary);
-            model.addAttribute("categories",  homeService.getActiveCategories());
+            model.addAttribute("summary",    summary);
+            model.addAttribute("categories", homeService.getActiveCategories());
             return "checkout";
         }
 
