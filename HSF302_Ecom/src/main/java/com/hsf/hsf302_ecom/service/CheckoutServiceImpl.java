@@ -13,17 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CheckoutServiceImpl implements CheckoutService {
-
-
 
     private final CartsService        cartsService;
     private final CartsRepo           cartsRepo;
@@ -34,6 +30,31 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final PaymentsRepo        paymentsRepo;
     private final InventoriesRepo     inventoriesRepo;
     private final ProductVariantsRepo variantsRepo;
+    private final ProductsRepo        productsRepo;
+
+    private void autoDeactivateIfDepleted(Long variantId, Long productId) {
+        Inventories inv = inventoriesRepo.findByProductVariantId(variantId).orElse(null);
+        if (inv == null || inv.getStock() > 0) return;
+
+        variantsRepo.findById(variantId).ifPresent(v -> {
+            if (Boolean.TRUE.equals(v.getStatus())) {
+                v.setStatus(false);
+                variantsRepo.save(v);
+            }
+        });
+
+        boolean anyOtherActive =
+                variantsRepo.existsOtherActiveVariant(productId, variantId);
+
+        if (!anyOtherActive) {
+            productsRepo.findById(productId).ifPresent(p -> {
+                if (Boolean.TRUE.equals(p.getStatus())) {
+                    p.setStatus(false);
+                    productsRepo.save(p);
+                }
+            });
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -69,13 +90,11 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .map(CheckoutSummaryDTO.CheckoutItemDTO::getSubTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal total = subtotal;
-
         return CheckoutSummaryDTO.builder()
                 .items(items)
                 .subtotal(subtotal)
                 .shippingFee(BigDecimal.ZERO)
-                .total(total)
+                .total(subtotal)
                 .cartEmpty(false)
                 .build();
     }
@@ -88,66 +107,70 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .orElseThrow(() -> new IllegalStateException("No active cart found."));
 
         List<CartItems> cartItems = cartItemsRepo.findByCartIdWithDetails(cart.getId());
-        if (cartItems.isEmpty()) {
+        if (cartItems.isEmpty())
             throw new IllegalStateException("Cannot place an order with an empty cart.");
-        }
 
         BigDecimal subtotal = BigDecimal.ZERO;
         for (CartItems ci : cartItems) {
-            Long qty       = ci.getQuantity();
-            subtotal = subtotal.add(ci.getProductVariant().getPrice().multiply(BigDecimal.valueOf(qty)));
+            subtotal = subtotal.add(
+                    ci.getProductVariant().getPrice()
+                            .multiply(BigDecimal.valueOf(ci.getQuantity())));
         }
 
-        BigDecimal total = subtotal;
-
+        // ── Resolve payment method ───────────────────────────────────────────
         PaymentMethod paymentMethod;
         try {
             paymentMethod = PaymentMethod.valueOf(request.getPaymentMethod().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid payment method: " + request.getPaymentMethod());
+            throw new IllegalArgumentException(
+                    "Invalid payment method: " + request.getPaymentMethod());
         }
 
-        Users user = usersRepo.getReferenceById(userId);
+        Users  user  = usersRepo.getReferenceById(userId);
         Orders order = Orders.builder()
                 .user(user)
                 .shippingAddress(request.getShippingAddress())
                 .shippingCity(request.getShippingCity())
                 .shippingDistrict(request.getShippingDistrict())
                 .status(OrderStatus.PENDING)
-                .totalPrice(total)
+                .totalPrice(subtotal)
                 .build();
         order = ordersRepo.save(order);
 
+        // ── Persist order items + deduct inventory ───────────────────────────
         List<OrderItems> orderItemsList = new ArrayList<>();
         for (CartItems ci : cartItems) {
-            ProductVariants variant = ci.getProductVariant();
-            Long qty                = ci.getQuantity();
-            BigDecimal unitPrice    = variant.getPrice();
-            BigDecimal sub          = unitPrice.multiply(BigDecimal.valueOf(qty));
+            ProductVariants variant   = ci.getProductVariant();
+            Long            variantId = variant.getId();
+            // Read product id directly from the already-fetched variant proxy —
+            // getProduct() here only loads the FK, not the variants collection.
+            Long            productId = variant.getProduct().getId();
+            Long            qty       = ci.getQuantity();
+            BigDecimal      unitPrice = variant.getPrice();
 
             String productName = variant.getProduct().getName()
                     + " (" + variant.getColor() + " / " + variant.getSpec() + ")";
 
-            OrderItems oi = OrderItems.builder()
+            orderItemsList.add(OrderItems.builder()
                     .order(order)
                     .productVariant(variant)
                     .productName(productName)
                     .price(unitPrice)
                     .quantity(qty)
-                    .subTotal(sub)
-                    .build();
-            orderItemsList.add(oi);
+                    .subTotal(unitPrice.multiply(BigDecimal.valueOf(qty)))
+                    .build());
 
-            inventoriesRepo.deductStockOnOrder(variant.getId(), qty);
+            inventoriesRepo.deductStockOnOrder(variantId, qty);
+
+            autoDeactivateIfDepleted(variantId, productId);
         }
         orderItemsRepo.saveAll(orderItemsList);
 
-        Payments payment = Payments.builder()
+        paymentsRepo.save(Payments.builder()
                 .order(order)
                 .method(paymentMethod)
-                .amount(total)
-                .build();
-        paymentsRepo.save(payment);
+                .amount(subtotal)
+                .build());
 
         cart.setCartItems(cartItems);
         cart.setStatus(CartStatus.ORDERED);

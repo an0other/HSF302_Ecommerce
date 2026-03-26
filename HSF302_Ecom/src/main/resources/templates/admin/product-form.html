@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Products', ~{::main})}">
+<head>
+    <title th:text="${isEdit} ? 'Edit Product — Voltex Admin' : 'New Product — Voltex Admin'">Product Form</title>
+</head>
+<body>
+<main>
+
+    <!-- Breadcrumb -->
+    <div th:replace="~{admin/fragments/product-breadcrumb :: breadcrumb('products', null, null, null)}"></div>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title" th:text="${isEdit} ? 'Edit Product' : 'New Product'">Product</h1>
+            <p class="adm-page-sub"
+               th:text="${isEdit} ? 'Update product details and manage images' : 'Add a new product to the catalogue'">—</p>
+        </div>
+        <a th:href="@{/admin/products}" class="adm-btn adm-btn--ghost">← Back to Products</a>
+    </div>
+
+    <div class="adm-form-card" style="max-width:760px;">
+
+        <div class="adm-form-error" th:if="${formError}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span th:text="${formError}"></span>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════
+             EDIT form — status toggle + image manager
+        ══════════════════════════════════════════════════════ -->
+        <form th:if="${isEdit}"
+              th:action="@{/admin/products/{id}/edit(id=${productId})}"
+              th:object="${productForm}" method="post" class="adm-form">
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="nameE">
+                    Product Name <span class="adm-required">*</span>
+                </label>
+                <input type="text" id="nameE" th:field="*{name}"
+                       th:classappend="${#fields.hasErrors('name')} ? ' adm-input--error'"
+                       class="adm-input" placeholder="e.g. iPhone 15 Pro" autofocus />
+                <span class="adm-field-error"
+                      th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="descE">
+                    Description <span class="adm-required">*</span>
+                </label>
+                <textarea id="descE" th:field="*{description}"
+                          th:classappend="${#fields.hasErrors('description')} ? ' adm-input--error'"
+                          class="adm-input"
+                          style="height:90px;padding-top:10px;resize:vertical;"
+                          placeholder="Brief product description (5–255 characters)"></textarea>
+                <span class="adm-field-error"
+                      th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+            </div>
+
+            <div class="adm-form-row">
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="catE">
+                        Category <span class="adm-required">*</span>
+                    </label>
+                    <select id="catE" th:field="*{categoryId}"
+                            th:classappend="${#fields.hasErrors('categoryId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select category —</option>
+                        <option th:each="cat : ${categories}"
+                                th:value="${cat.id}" th:text="${cat.name}">Cat</option>
+                    </select>
+                    <span class="adm-field-error"
+                          th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></span>
+                </div>
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="brandE">
+                        Brand <span class="adm-required">*</span>
+                    </label>
+                    <select id="brandE" th:field="*{brandId}"
+                            th:classappend="${#fields.hasErrors('brandId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select brand —</option>
+                        <option th:each="b : ${brands}"
+                                th:value="${b.id}" th:text="${b.name}">Brand</option>
+                    </select>
+                    <span class="adm-field-error"
+                          th:if="${#fields.hasErrors('brandId')}" th:errors="*{brandId}"></span>
+                </div>
+            </div>
+
+            <!-- Status toggle -->
+            <div class="adm-form-field">
+                <label class="adm-form-label">Status</label>
+                <div class="adm-toggle-group">
+                    <label class="adm-toggle-opt"
+                           th:classappend="${!productForm.status and !hasActiveStock} ? ' adm-toggle-opt--locked'">
+                        <input type="radio" th:field="*{status}" th:value="${true}"
+                               th:disabled="${!productForm.status and !hasActiveStock}" />
+                        <span class="adm-toggle-label adm-toggle-label--green">Active</span>
+                    </label>
+                    <label class="adm-toggle-opt"
+                           th:classappend="${hasActiveStock} ? ' adm-toggle-opt--locked'">
+                        <input type="radio" th:field="*{status}" th:value="${false}"
+                               th:disabled="${hasActiveStock}" />
+                        <span class="adm-toggle-label adm-toggle-label--red">Inactive</span>
+                    </label>
+                </div>
+                <span th:if="${!productForm.status and !hasActiveStock}"
+                      class="adm-field-hint adm-field-hint--warn">
+                    Cannot activate manually — the product has no active variant with available
+                    stock (stock − reserved &gt; 0). Add inventory to a variant and it will
+                    auto-activate the product.
+                </span>
+                <span th:if="${hasActiveStock}"
+                      class="adm-field-hint adm-field-hint--warn">
+                    Cannot deactivate manually — the product still has variants with stock.
+                </span>
+                <span th:if="${!hasActiveStock and productForm.status}"
+                      class="adm-field-hint">
+                    Status is managed automatically through inventory.
+                </span>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Save Changes
+                </button>
+                <a th:href="@{/admin/products}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+        </form>
+
+        <!-- ══════════════════════════════════════════════════════
+             CREATE form — no status field
+        ══════════════════════════════════════════════════════ -->
+        <form th:unless="${isEdit}"
+              th:action="@{/admin/products/new}"
+              th:object="${productForm}" method="post" class="adm-form">
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="nameN">
+                    Product Name <span class="adm-required">*</span>
+                </label>
+                <input type="text" id="nameN" th:field="*{name}"
+                       th:classappend="${#fields.hasErrors('name')} ? ' adm-input--error'"
+                       class="adm-input" placeholder="e.g. iPhone 15 Pro" autofocus />
+                <span class="adm-field-error"
+                      th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            </div>
+
+            <div class="adm-form-field">
+                <label class="adm-form-label" for="descN">
+                    Description <span class="adm-required">*</span>
+                </label>
+                <textarea id="descN" th:field="*{description}"
+                          th:classappend="${#fields.hasErrors('description')} ? ' adm-input--error'"
+                          class="adm-input"
+                          style="height:90px;padding-top:10px;resize:vertical;"
+                          placeholder="Brief product description (5–255 characters)"></textarea>
+                <span class="adm-field-error"
+                      th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+            </div>
+
+            <div class="adm-form-row">
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="catN">
+                        Category <span class="adm-required">*</span>
+                    </label>
+                    <select id="catN" th:field="*{categoryId}"
+                            th:classappend="${#fields.hasErrors('categoryId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select category —</option>
+                        <option th:each="cat : ${categories}"
+                                th:value="${cat.id}" th:text="${cat.name}">Cat</option>
+                    </select>
+                    <span class="adm-field-error"
+                          th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></span>
+                </div>
+                <div class="adm-form-field">
+                    <label class="adm-form-label" for="brandN">
+                        Brand <span class="adm-required">*</span>
+                    </label>
+                    <select id="brandN" th:field="*{brandId}"
+                            th:classappend="${#fields.hasErrors('brandId')} ? ' adm-input--error'"
+                            class="adm-input" style="height:42px;cursor:pointer;">
+                        <option value="">— Select brand —</option>
+                        <option th:each="b : ${brands}"
+                                th:value="${b.id}" th:text="${b.name}">Brand</option>
+                    </select>
+                    <span class="adm-field-error"
+                          th:if="${#fields.hasErrors('brandId')}" th:errors="*{brandId}"></span>
+                </div>
+            </div>
+
+            <!-- Info banner -->
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;
+                        background:var(--adm-blue-bg);border:1.5px solid rgba(37,99,235,.2);
+                        border-radius:var(--radius-sm);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="var(--adm-blue)" stroke-width="2.2" stroke-linecap="round"
+                     stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+                <span style="font-size:12.5px;color:var(--adm-blue);line-height:1.5;">
+                    New products start as <strong>Inactive</strong>. After creating the product,
+                    add variants then add stock via <strong>Inventory</strong> — the product
+                    activates automatically once a variant has available stock.
+                    You can also upload images after creation via the Edit page.
+                </span>
+            </div>
+
+            <div class="adm-form-actions">
+                <button type="submit" class="adm-btn adm-btn--primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Create Product
+                </button>
+                <a th:href="@{/admin/products}" class="adm-btn adm-btn--ghost">Cancel</a>
+            </div>
+        </form>
+
+    </div><!-- /adm-form-card -->
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         IMAGE MANAGER — only shown on edit page
+    ════════════════════════════════════════════════════════════════════════ -->
+    <div th:if="${isEdit}" class="adm-form-card" style="max-width:760px;margin-top:24px;">
+
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+            <div>
+                <h2 style="font-size:15px;font-weight:600;margin:0;">Product Images</h2>
+                <p id="img-count-label"
+                   style="font-size:12px;color:var(--adm-muted);margin:2px 0 0;"
+                   th:text="${imageCount} + ' / 5 images uploaded'">0 / 5 images uploaded</p>
+            </div>
+            <!-- Upload button — hidden when limit reached -->
+            <label id="upload-btn"
+                   th:classappend="${imageCount >= 5} ? ' adm-btn--disabled'"
+                   class="adm-btn adm-btn--primary"
+                   style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 16 12 12 8 16"/>
+                    <line x1="12" y1="12" x2="12" y2="21"/>
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                </svg>
+                Upload Images
+                <input type="file" id="img-file-input" accept="image/jpeg,image/png,image/webp,image/gif"
+                       multiple style="display:none;"
+                       th:disabled="${imageCount >= 5}" />
+            </label>
+        </div>
+
+        <!-- Error / info message area -->
+        <div id="img-msg" style="display:none;margin-bottom:12px;padding:10px 14px;
+             border-radius:var(--radius-sm);font-size:13px;"></div>
+
+        <!-- Upload progress bar -->
+        <div id="upload-progress-wrap"
+             style="display:none;margin-bottom:14px;background:var(--adm-surface-2);
+                    border-radius:4px;overflow:hidden;height:6px;">
+            <div id="upload-progress-bar"
+                 style="height:100%;width:0;background:var(--adm-blue);transition:width .3s;"></div>
+        </div>
+
+        <!-- Image grid -->
+        <div id="img-grid"
+             style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;">
+
+            <!-- Existing images (server-rendered) -->
+            <div th:each="img : ${images}"
+                 th:id="'img-card-' + ${img.id}"
+                 class="img-card"
+                 th:classappend="${img.isPrimary} ? ' img-card--primary'"
+                 style="position:relative;border-radius:var(--radius-sm);overflow:hidden;
+                        border:2px solid transparent;background:var(--adm-surface-2);
+                        aspect-ratio:1/1;cursor:default;">
+
+                <!-- Image -->
+                <img th:src="${img.imageUrl}" alt="Product image"
+                     style="width:100%;height:100%;object-fit:cover;display:block;" />
+
+                <!-- Primary badge -->
+                <span th:if="${img.isPrimary}"
+                      class="img-primary-badge"
+                      style="position:absolute;top:6px;left:6px;
+                             background:var(--adm-blue);color:#fff;
+                             font-size:10px;font-weight:600;padding:2px 7px;
+                             border-radius:20px;pointer-events:none;">Primary</span>
+
+                <!-- Action overlay -->
+                <div class="img-overlay"
+                     style="position:absolute;inset:0;background:rgba(0,0,0,.45);
+                            display:flex;align-items:center;justify-content:center;gap:8px;
+                            opacity:0;transition:opacity .2s;">
+
+                    <!-- Set primary (hidden if already primary) -->
+                    <button th:unless="${img.isPrimary}"
+                            type="button"
+                            th:onclick="'setPrimary(' + ${img.id} + ', this)'"
+                            title="Set as primary"
+                            style="background:#fff;border:none;border-radius:6px;
+                                   width:32px;height:32px;cursor:pointer;
+                                   display:flex;align-items:center;justify-content:center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                             stroke="#f59e0b" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </button>
+
+                    <!-- Delete -->
+                    <button type="button"
+                            th:onclick="'deleteImage(' + ${img.id} + ', this)'"
+                            title="Delete image"
+                            style="background:#fff;border:none;border-radius:6px;
+                                   width:32px;height:32px;cursor:pointer;
+                                   display:flex;align-items:center;justify-content:center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                             stroke="#ef4444" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty-state placeholder (shown via JS when 0 images) -->
+            <div id="img-empty"
+                 th:style="${#lists.isEmpty(images)} ? '' : 'display:none'"
+                 style="grid-column:1/-1;padding:32px;text-align:center;
+                        color:var(--adm-muted);font-size:13px;
+                        border:2px dashed var(--adm-border);border-radius:var(--radius-sm);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     style="margin:0 auto 8px;display:block;opacity:.4;">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                No images yet. Upload up to 5 images.
+            </div>
+        </div>
+
+        <!-- Caption -->
+        <p style="margin-top:12px;font-size:11.5px;color:var(--adm-muted);">
+            Accepted formats: JPEG, PNG, WEBP, GIF &mdash; max 5&nbsp;MB each.
+            The <strong>primary</strong> image is shown as the product thumbnail everywhere in the store.
+            Click an image to reveal the action buttons.
+        </p>
+    </div>
+
+    <!-- ── Styles for image cards ────────────────────────────────────────── -->
+    <style>
+        .img-card:hover .img-overlay { opacity: 1 !important; }
+        .img-card--primary           { border-color: var(--adm-blue) !important; }
+        .adm-btn--disabled           { opacity:.5;pointer-events:none; }
+    </style>
+
+    <!-- ── Image-manager JavaScript ──────────────────────────────────────── -->
+    <script th:if="${isEdit}" th:inline="javascript">
+        const PRODUCT_ID  = /*[[${productId}]]*/ 0;
+        const MAX_IMAGES  = 5;
+
+        const grid        = document.getElementById('img-grid');
+        const fileInput   = document.getElementById('img-file-input');
+        const uploadBtn   = document.getElementById('upload-btn');
+        const countLabel  = document.getElementById('img-count-label');
+        const msgBox      = document.getElementById('img-msg');
+        const emptyState  = document.getElementById('img-empty');
+        const progressWrap = document.getElementById('upload-progress-wrap');
+        const progressBar  = document.getElementById('upload-progress-bar');
+
+        // ── helpers ──────────────────────────────────────────────────────
+
+        function showMsg(text, type) {
+            msgBox.style.display = 'block';
+            msgBox.textContent   = text;
+            msgBox.style.background = type === 'error'
+                ? 'rgba(239,68,68,.1)'   : 'rgba(34,197,94,.1)';
+            msgBox.style.color  = type === 'error' ? '#b91c1c' : '#15803d';
+            msgBox.style.border = '1.5px solid ' + (type === 'error'
+                ? 'rgba(239,68,68,.3)' : 'rgba(34,197,94,.3)');
+        }
+
+        function hideMsg() {
+            msgBox.style.display = 'none';
+        }
+
+        function currentCount() {
+            return grid.querySelectorAll('.img-card').length;
+        }
+
+        function updateUI() {
+            const count  = currentCount();
+            const full   = count >= MAX_IMAGES;
+            countLabel.textContent = count + ' / ' + MAX_IMAGES + ' images uploaded';
+            uploadBtn.classList.toggle('adm-btn--disabled', full);
+            fileInput.disabled = full;
+            emptyState.style.display = count === 0 ? '' : 'none';
+        }
+
+        function buildCard(img) {
+            const card = document.createElement('div');
+            card.id        = 'img-card-' + img.id;
+            card.className = 'img-card' + (img.isPrimary ? ' img-card--primary' : '');
+            card.style.cssText =
+                'position:relative;border-radius:var(--radius-sm);overflow:hidden;' +
+                'border:2px solid ' + (img.isPrimary ? 'var(--adm-blue)' : 'transparent') + ';' +
+                'background:var(--adm-surface-2);aspect-ratio:1/1;cursor:default;';
+
+            card.innerHTML = `
+                <img src="${img.imageUrl}" alt="Product image"
+                     style="width:100%;height:100%;object-fit:cover;display:block;" />
+                ${img.isPrimary
+                ? '<span class="img-primary-badge" style="position:absolute;top:6px;left:6px;background:var(--adm-blue);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;pointer-events:none;">Primary</span>'
+                : ''}
+                <div class="img-overlay"
+                     style="position:absolute;inset:0;background:rgba(0,0,0,.45);
+                            display:flex;align-items:center;justify-content:center;gap:8px;
+                            opacity:0;transition:opacity .2s;">
+                    ${!img.isPrimary ? `
+                    <button type="button" onclick="setPrimary(${img.id}, this)"
+                            title="Set as primary"
+                            style="background:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </button>` : ''}
+                    <button type="button" onclick="deleteImage(${img.id}, this)"
+                            title="Delete image"
+                            style="background:#fff;border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                        </svg>
+                    </button>
+                </div>`;
+            return card;
+        }
+
+        function rebuildGrid(images) {
+            // remove old cards
+            grid.querySelectorAll('.img-card').forEach(c => c.remove());
+            images.forEach(img => grid.appendChild(buildCard(img)));
+            updateUI();
+        }
+
+        // ── upload ───────────────────────────────────────────────────────
+
+        fileInput.addEventListener('change', async () => {
+            if (!fileInput.files.length) return;
+            hideMsg();
+
+            const slots = MAX_IMAGES - currentCount();
+            if (slots <= 0) { showMsg('Image limit reached (max 5).', 'error'); return; }
+
+            const form = new FormData();
+            let added = 0;
+            for (const f of fileInput.files) {
+                if (added >= slots) break;
+                form.append('files', f);
+                added++;
+            }
+            fileInput.value = '';
+
+            progressWrap.style.display = 'block';
+            progressBar.style.width    = '0';
+
+            // Simulate progress during XHR
+            let fake = 0;
+            const ticker = setInterval(() => {
+                fake = Math.min(fake + 12, 85);
+                progressBar.style.width = fake + '%';
+            }, 120);
+
+            try {
+                const res  = await fetch(`/admin/products/${PRODUCT_ID}/images`, {
+                    method: 'POST', body: form
+                });
+                const data = await res.json();
+                clearInterval(ticker);
+                progressBar.style.width = '100%';
+                setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0'; }, 600);
+
+                if (!res.ok || data.error) {
+                    showMsg(data.error || 'Upload failed.', 'error');
+                    return;
+                }
+                // append new cards
+                data.images.forEach(img => grid.appendChild(buildCard(img)));
+                updateUI();
+                showMsg(data.images.length + ' image(s) uploaded successfully.', 'success');
+            } catch (e) {
+                clearInterval(ticker);
+                progressWrap.style.display = 'none';
+                showMsg('Network error. Please try again.', 'error');
+            }
+        });
+
+        // ── delete ───────────────────────────────────────────────────────
+
+        async function deleteImage(imageId, btn) {
+            if (!confirm('Delete this image?')) return;
+            btn.disabled = true;
+            hideMsg();
+            try {
+                const res  = await fetch(`/admin/products/${PRODUCT_ID}/images/${imageId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (!res.ok || data.error) { showMsg(data.error || 'Delete failed.', 'error'); btn.disabled = false; return; }
+                rebuildGrid(data.images);
+                showMsg('Image deleted.', 'success');
+            } catch (e) {
+                showMsg('Network error.', 'error');
+                btn.disabled = false;
+            }
+        }
+
+        // ── set primary ──────────────────────────────────────────────────
+
+        async function setPrimary(imageId, btn) {
+            btn.disabled = true;
+            hideMsg();
+            try {
+                const res  = await fetch(`/admin/products/${PRODUCT_ID}/images/${imageId}/primary`, { method: 'PATCH' });
+                const data = await res.json();
+                if (!res.ok || data.error) { showMsg(data.error || 'Failed.', 'error'); btn.disabled = false; return; }
+
+                // Update badges + borders without a full rebuild
+                grid.querySelectorAll('.img-card').forEach(card => {
+                    const isCurrent = card.id === 'img-card-' + imageId;
+                    card.style.borderColor = isCurrent ? 'var(--adm-blue)' : 'transparent';
+                    card.classList.toggle('img-card--primary', isCurrent);
+
+                    // badge
+                    let badge = card.querySelector('.img-primary-badge');
+                    if (isCurrent) {
+                        if (!badge) {
+                            badge = document.createElement('span');
+                            badge.className  = 'img-primary-badge';
+                            badge.style.cssText =
+                                'position:absolute;top:6px;left:6px;background:var(--adm-blue);' +
+                                'color:#fff;font-size:10px;font-weight:600;padding:2px 7px;' +
+                                'border-radius:20px;pointer-events:none;';
+                            badge.textContent = 'Primary';
+                            card.appendChild(badge);
+                        }
+                        // hide its "set primary" star button
+                        const star = card.querySelector('[title="Set as primary"]');
+                        if (star) star.style.display = 'none';
+                    } else {
+                        if (badge) badge.remove();
+                        // show star button again (rebuild to keep it clean)
+                    }
+                });
+                // Rebuild grid from server for clean state
+                const listRes  = await fetch(`/admin/products/${PRODUCT_ID}/images/list`);
+                if (listRes.ok) { const d = await listRes.json(); rebuildGrid(d.images); }
+                showMsg('Primary image updated.', 'success');
+            } catch (e) {
+                showMsg('Network error.', 'error');
+                btn.disabled = false;
+            }
+        }
+
+        // ── init ─────────────────────────────────────────────────────────
+        updateUI();
+    </script>
+
+</main>
+</body>
+</html>

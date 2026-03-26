@@ -268,22 +268,6 @@ public class AdminController {
         return "redirect:/admin/inventory";
     }
 
-    @PostMapping("/inventory/{variantId}/restock")
-    public String inventoryRestock(@PathVariable Long variantId,
-                                   @RequestParam Long amount,
-                                   HttpSession session, RedirectAttributes ra) {
-        if (requireAdmin(session) == null) return "redirect:/login";
-        try {
-            adminService.restockInventory(variantId, amount);
-            ra.addFlashAttribute("toast",     "Added " + amount + " units to stock.");
-            ra.addFlashAttribute("toastType", "success");
-        } catch (Exception e) {
-            ra.addFlashAttribute("toast",     e.getMessage());
-            ra.addFlashAttribute("toastType", "error");
-        }
-        return "redirect:/admin/inventory";
-    }
-
     @GetMapping("/orders")
     public String manageOrders(
             @RequestParam(required = false) OrderStatus status,

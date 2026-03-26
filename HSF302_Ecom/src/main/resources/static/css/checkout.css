@@ -392,12 +392,11 @@
     margin-top: 1px;
 }
 .checkout-item-price {
-    font-family: var(--font-display);
-    font-size: 13px; font-weight: 700;
-    color: var(--clr-text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--clr-accent);
     flex-shrink: 0;
 }
-
 /* Totals */
 .checkout-totals {
     padding: var(--space-5) var(--space-6);
@@ -415,18 +414,16 @@
 }
 .checkout-total-row--free { color: #16a34a; font-weight: 600; }
 .checkout-total-row--grand {
-    font-family: var(--font-display);
-    font-size: 18px; font-weight: 800;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--clr-text-primary);
-    letter-spacing: -.02em;
     border-top: 1.5px solid var(--clr-border);
     padding-top: var(--space-3);
     margin-top: var(--space-1);
 }
 .checkout-total-row--grand .checkout-total-amount { color: var(--clr-accent); }
 .checkout-total-label { font-weight: 400; }
-.checkout-total-amount { font-weight: 600; }
-
+.checkout-total-amount { font-weight: 600; color: var(--clr-accent); }
 /* Free shipping notice */
 .checkout-free-ship-notice {
     display: flex;

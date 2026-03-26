@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::title}, 'Products', ~{::main})}">
+<head><title th:text="${product.name} + ' — Variants — Voltex Admin'">Variants</title></head>
+<body>
+<main>
+
+    <!-- Breadcrumb -->
+    <div th:replace="~{admin/fragments/product-breadcrumb :: breadcrumb('variants', ${product}, null, null)}"></div>
+
+    <div class="adm-page-header">
+        <div>
+            <h1 class="adm-page-title">Variants</h1>
+            <p class="adm-page-sub" th:text="${#lists.size(variants)} + ' variant(s) for this product'">0 variants</p>
+        </div>
+        <a th:href="@{/admin/products/{id}/variants/new(id=${product.id})}" class="adm-btn adm-btn--primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Variant
+        </a>
+    </div>
+
+    <div class="adm-table-card">
+        <table class="adm-table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Color / Spec</th>
+                <th class="adm-th-center">Price</th>
+                <th class="adm-th-center">Stock</th>
+                <th class="adm-th-center">Reserved</th>
+                <th class="adm-th-center">Available</th>
+                <th class="adm-th-center">Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(variants)}">
+                <td colspan="8" class="adm-table-empty">No variants yet. Add one to start selling.</td>
+            </tr>
+            <tr th:each="v, s : ${variants}"
+                th:classappend="${!v.status} ? 'adm-row--inactive' : (${v.stockStatus == 'OUT'} ? 'adm-row--danger' : (${v.stockStatus == 'LOW'} ? 'adm-row--warn' : ''))">
+                <td class="adm-table-id" th:text="${s.index + 1}">1</td>
+                <td>
+                    <div class="adm-variant-label">
+                        <span class="adm-variant-color" th:text="${v.color}">Color</span>
+                        <span class="adm-variant-sep">/</span>
+                        <span class="adm-variant-spec" th:text="${v.spec}">Spec</span>
+                    </div>
+                </td>
+                <td class="adm-td-center">
+                    <span class="adm-price" th:text="${v.priceFormatted}">—</span>
+                </td>
+                <td class="adm-td-center adm-mono" th:text="${v.stock}">0</td>
+                <td class="adm-td-center adm-mono" th:text="${v.reserved}">0</td>
+                <td class="adm-td-center adm-mono"
+                    th:classappend="${v.stockStatus == 'OUT'} ? ' adm-avail--out' : (${v.stockStatus == 'LOW'} ? ' adm-avail--low' : ' adm-avail--ok')"
+                    th:text="${v.available}">0</td>
+                <td class="adm-td-center">
+                    <span th:if="${v.status}"  class="adm-badge adm-badge--green">Active</span>
+                    <span th:unless="${v.status}" class="adm-badge adm-badge--red">Inactive</span>
+                </td>
+                <td>
+                    <div class="adm-table-actions adm-table-actions--text">
+                        <!-- Manage inventory -->
+                        <a th:href="@{/admin/products/{pid}/variants/{vid}/inventory(pid=${product.id},vid=${v.id})}"
+                           class="adm-text-btn adm-text-btn--green">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            Inventory
+                        </a>
+                        <!-- Edit -->
+                        <a th:href="@{/admin/products/{pid}/variants/{vid}/edit(pid=${product.id},vid=${v.id})}"
+                           class="adm-text-btn">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Edit
+                        </a>
+                        <!-- Soft delete -->
+                        <form th:action="@{/admin/products/{pid}/variants/{vid}/delete(pid=${product.id},vid=${v.id})}"
+                              method="post" style="display:inline">
+                            <button type="button"
+                                    class="adm-text-btn adm-text-btn--danger"
+                                    th:classappend="${v.stock > 0} ? ' adm-text-btn--blocked'"
+                                    th:data-variant-label="${v.color + ' / ' + v.spec}"
+                                    onclick="confirmVariantDelete(this)">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                Deactivate
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top:12px;">
+        <a th:href="@{/admin/products}" class="adm-btn adm-btn--ghost" style="font-size:12.5px;">
+            ← Back to all products
+        </a>
+    </div>
+
+    <!-- Confirm modal -->
+    <div class="adm-modal-overlay" id="variantDeleteModal" style="display:none">
+        <div class="adm-modal">
+            <div class="adm-modal-header">
+                <h3 class="adm-modal-title">Deactivate Variant?</h3>
+                <button class="adm-modal-close" onclick="document.getElementById('variantDeleteModal').style.display='none'">&#x2715;</button>
+            </div>
+            <p class="adm-modal-sub" id="variantDeleteSub">This variant will be set to inactive.</p>
+            <div class="adm-form-actions">
+                <button id="variantDeleteBtn" class="adm-btn adm-btn--primary" style="background:var(--adm-red);border-color:var(--adm-red)">Deactivate</button>
+                <button class="adm-btn adm-btn--ghost" onclick="document.getElementById('variantDeleteModal').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<style>
+    .adm-row--inactive td { opacity:.55; }
+</style>
+
+<script>
+    function confirmVariantDelete(btn) {
+        const label = btn.dataset.variantLabel || 'this variant';
+        document.getElementById('variantDeleteSub').textContent = 'Deactivate "' + label + '"? It can be re-activated later via the edit form.';
+        const form = btn.closest('form');
+        document.getElementById('variantDeleteBtn').onclick = function() { form.submit(); };
+        document.getElementById('variantDeleteModal').style.display = 'flex';
+    }
+    document.getElementById('variantDeleteModal').addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+    });
+</script>
+</body>
+</html>

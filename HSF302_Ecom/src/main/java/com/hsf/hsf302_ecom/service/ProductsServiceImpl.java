@@ -63,7 +63,6 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     public Optional<ProductDetailDTO> getProductDetail(Long productId) {
         return productsRepo.findById(productId)
-                .filter(Products::getStatus)
                 .map(this::toDTO);
     }
 

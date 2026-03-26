@@ -15,7 +15,6 @@ import java.util.List;
 @Repository
 public interface ProductsRepo extends JpaRepository<Products, Long> {
 
-    /* ── HOME: newest per category (carousel) ─────────────────────── */
     @Query("""
         SELECT new com.hsf.hsf302_ecom.dto.HomeProductDTO(
             p.id, p.name, b.name, c.name, c.id,
@@ -26,13 +25,16 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
         )
         FROM Products p JOIN p.brand b JOIN p.category c
         WHERE p.status = true AND c.id = :categoryId
+          AND EXISTS (
+              SELECT 1 FROM Inventories i
+              WHERE i.productVariant.product = p
+                AND i.productVariant.status = true
+                AND (i.stock - i.reserved) > 0
+          )
         ORDER BY p.createdDate DESC
         """)
     List<HomeProductDTO> findNewestByCategory(@Param("categoryId") Long categoryId);
 
-    /* ─────────────────────────────────────────────────────────────────
-       PRODUCTS PAGE — ORDER BY newest (default)
-    ───────────────────────────────────────────────────────────────── */
     @Query("""
         SELECT new com.hsf.hsf302_ecom.dto.HomeProductDTO(
             p.id, p.name, b.name, c.name, c.id,
@@ -53,6 +55,12 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:maxPrice   IS NULL OR
                (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
                <= :maxPrice)
+          AND EXISTS (
+              SELECT 1 FROM Inventories i
+              WHERE i.productVariant.product = p
+                AND i.productVariant.status = true
+                AND (i.stock - i.reserved) > 0
+          )
         ORDER BY p.createdDate DESC
         """)
     Page<HomeProductDTO> findByFilterNewest(
@@ -63,7 +71,6 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
             @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
-    /* ── ORDER BY price ASC ──────────────────────────────────────── */
     @Query("""
         SELECT new com.hsf.hsf302_ecom.dto.HomeProductDTO(
             p.id, p.name, b.name, c.name, c.id,
@@ -84,6 +91,12 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:maxPrice   IS NULL OR
                (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
                <= :maxPrice)
+          AND EXISTS (
+              SELECT 1 FROM Inventories i
+              WHERE i.productVariant.product = p
+                AND i.productVariant.status = true
+                AND (i.stock - i.reserved) > 0
+          )
         ORDER BY (SELECT MIN(pv.price) FROM ProductVariants pv WHERE pv.product = p AND pv.status = true) ASC
         """)
     Page<HomeProductDTO> findByFilterPriceAsc(
@@ -94,7 +107,6 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
             @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
-    /* ── ORDER BY price DESC ─────────────────────────────────────── */
     @Query("""
         SELECT new com.hsf.hsf302_ecom.dto.HomeProductDTO(
             p.id, p.name, b.name, c.name, c.id,
@@ -115,6 +127,12 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:maxPrice   IS NULL OR
                (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
                <= :maxPrice)
+          AND EXISTS (
+              SELECT 1 FROM Inventories i
+              WHERE i.productVariant.product = p
+                AND i.productVariant.status = true
+                AND (i.stock - i.reserved) > 0
+          )
         ORDER BY (SELECT MIN(pv.price) FROM ProductVariants pv WHERE pv.product = p AND pv.status = true) DESC
         """)
     Page<HomeProductDTO> findByFilterPriceDesc(
@@ -125,7 +143,6 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
             @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
-    /* ── ORDER BY rating DESC ────────────────────────────────────── */
     @Query("""
         SELECT new com.hsf.hsf302_ecom.dto.HomeProductDTO(
             p.id, p.name, b.name, c.name, c.id,
@@ -146,6 +163,12 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
           AND (:maxPrice   IS NULL OR
                (SELECT MIN(pv3.price) FROM ProductVariants pv3 WHERE pv3.product = p AND pv3.status = true)
                <= :maxPrice)
+          AND EXISTS (
+              SELECT 1 FROM Inventories i
+              WHERE i.productVariant.product = p
+                AND i.productVariant.status = true
+                AND (i.stock - i.reserved) > 0
+          )
         ORDER BY (SELECT COALESCE(AVG(CAST(r3.rating AS double)), 0) FROM Reviews r3 WHERE r3.product = p) DESC
         """)
     Page<HomeProductDTO> findByFilterRating(
@@ -156,7 +179,6 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
             @Param("maxPrice")   BigDecimal maxPrice,
             Pageable pageable);
 
-    /* ── Dispatcher used by ProductServiceImpl ───────────────────── */
     default Page<HomeProductDTO> findByFilter(
             Long categoryId, Long brandId, String keyword,
             String sort, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
@@ -168,4 +190,30 @@ public interface ProductsRepo extends JpaRepository<Products, Long> {
             return findByFilterRating(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
         return findByFilterNewest(categoryId, brandId, keyword, minPrice, maxPrice, pageable);
     }
+
+    @Query(value = """
+    SELECT p FROM Products p
+    JOIN FETCH p.category
+    JOIN FETCH p.brand
+    LEFT JOIN FETCH p.productVariants
+    WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%',:keyword,'%')))
+      AND (:categoryId IS NULL OR p.category.id = :categoryId)
+      AND (:brandId    IS NULL OR p.brand.id    = :brandId)
+    ORDER BY p.createdDate DESC
+    """,
+            countQuery = """
+    SELECT COUNT(p) FROM Products p
+    WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%',:keyword,'%')))
+      AND (:categoryId IS NULL OR p.category.id = :categoryId)
+      AND (:brandId    IS NULL OR p.brand.id    = :brandId)
+    """)
+    Page<Products> findByFiltersAdmin(
+            @Param("keyword")    String keyword,
+            @Param("categoryId") Long categoryId,
+            @Param("brandId")    Long brandId,
+            Pageable pageable);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
+
+    boolean existsByNameIgnoreCase(String name);
 }
