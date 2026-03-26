@@ -318,13 +318,14 @@ public class AdminProductController {
     @GetMapping("/{productId}/variants/{variantId}/inventory")
     public String inventoryForm(@PathVariable Long productId,
                                 @PathVariable Long variantId,
+                                @RequestParam(defaultValue = "") String returnUrl,
                                 HttpSession session, Model model) {
         if (requireAdmin(session) == null) return "redirect:/login";
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
-        boolean variantActive = Boolean.FALSE.equals(
-                productService.getVariantForm(variantId).getStatus()) ? false : true;
+        boolean variantActive = Boolean.TRUE.equals(
+                productService.getVariantForm(variantId).getStatus());
         boolean productActive = Boolean.TRUE.equals(p.getStatus());
 
         String statusNote = null;
@@ -337,10 +338,16 @@ public class AdminProductController {
             statusNote = "The parent product is inactive. "
                     + "Adding stock will automatically activate the product too.";
 
+        // Resolve where Back/Cancel should go
+        String resolvedReturn = returnUrl.isBlank()
+                ? "/admin/products/" + productId + "/variants"
+                : returnUrl;
+
         model.addAttribute("statusNote",    statusNote);
         model.addAttribute("inventoryForm", productService.getInventoryFormForVariant(variantId));
         model.addAttribute("variantId",     variantId);
         model.addAttribute("product",       p);
+        model.addAttribute("returnUrl",     resolvedReturn);
         model.addAttribute("section",       "products");
         model.addAttribute("stage",         "inventory");
         return "admin/product-inventory-form";
@@ -349,15 +356,22 @@ public class AdminProductController {
     @PostMapping("/{productId}/variants/{variantId}/inventory")
     public String inventorySave(@PathVariable Long productId,
                                 @PathVariable Long variantId,
+                                @RequestParam(defaultValue = "") String returnUrl,
                                 @Valid @ModelAttribute("inventoryForm") InventoryFormDTO form,
                                 BindingResult br, HttpSession session,
                                 Model model, RedirectAttributes ra) {
         if (requireAdmin(session) == null) return "redirect:/login";
         Products p = productService.findProductById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
+        String resolvedReturn = returnUrl.isBlank()
+                ? "/admin/products/" + productId + "/variants"
+                : returnUrl;
+
         if (br.hasErrors()) {
             model.addAttribute("variantId", variantId);
             model.addAttribute("product",   p);
+            model.addAttribute("returnUrl", resolvedReturn);
             model.addAttribute("section",   "products");
             model.addAttribute("stage",     "inventory");
             return "admin/product-inventory-form";
@@ -370,10 +384,11 @@ public class AdminProductController {
             model.addAttribute("formError", e.getMessage());
             model.addAttribute("variantId", variantId);
             model.addAttribute("product",   p);
+            model.addAttribute("returnUrl", resolvedReturn);
             model.addAttribute("section",   "products");
             model.addAttribute("stage",     "inventory");
             return "admin/product-inventory-form";
         }
-        return "redirect:/admin/products/" + productId + "/variants";
+        return "redirect:" + resolvedReturn;
     }
 }

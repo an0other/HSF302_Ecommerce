@@ -13,7 +13,7 @@
             <h1 class="adm-page-title">Inventory</h1>
             <p class="adm-page-sub" th:text="'Manage stock for ' + ${inventoryForm.variantLabel}">—</p>
         </div>
-        <a th:href="@{/admin/products/{id}/variants(id=${product.id})}" class="adm-btn adm-btn--ghost">← Back to Variants</a>
+        <a th:href="${returnUrl}" class="adm-btn adm-btn--ghost">← Back</a>
     </div>
 
     <div class="adm-form-card" style="max-width:560px;">
@@ -65,6 +65,9 @@
         <form th:action="@{/admin/products/{pid}/variants/{vid}/inventory(pid=${product.id},vid=${variantId})}"
               th:object="${inventoryForm}" method="post" class="adm-form">
 
+            <!-- Pass returnUrl through the POST so the controller can redirect correctly -->
+            <input type="hidden" name="returnUrl" th:value="${returnUrl}" />
+
             <!-- Hidden fields carry current stock/reserved to controller -->
             <input type="hidden" th:field="*{stock}" />
             <input type="hidden" th:field="*{reserved}" />
@@ -87,16 +90,17 @@
 
             <div class="adm-form-divider"></div>
 
-            <!-- Units to add -->
+            <!-- Units to add / reduce -->
             <div class="adm-form-field">
                 <label class="adm-form-label" for="addAmount">
-                    Add Stock <span class="adm-required">*</span>
+                    Adjust Stock <span class="adm-required">*</span>
                 </label>
                 <input type="number" id="addAmount" name="addAmount"
-                       class="adm-input adm-input--mono" min="0" value="0"
+                       class="adm-input adm-input--mono" value="0"
                        oninput="recalc()" autofocus />
                 <span class="adm-field-hint">
-                    Units to add.
+                    Enter a positive number to add stock or a negative number to reduce it.
+                    Reduction is only allowed when the new total &ge; reserved units.
                     <span th:if="${statusNote}"
                           style="color:var(--adm-warn);font-style:normal;font-weight:600;">
                         Adding stock &gt; reserved will auto-activate this variant and its product.
@@ -111,9 +115,13 @@
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                <span th:text="${inventoryForm.stock}" id="baseStock" style="display:none">0</span>
+                <span th:text="${inventoryForm.stock}"    id="baseStock" style="display:none">0</span>
+                <span th:text="${inventoryForm.reserved}" id="baseReserved" style="display:none">0</span>
                 New total: <strong id="calcTotal">—</strong>
                 &nbsp;·&nbsp; Available = <strong id="calcAvail">—</strong>
+                &nbsp;<span id="calcWarn" style="color:#dc2626;font-weight:600;display:none">
+                    — cannot reduce below reserved
+                </span>
             </div>
 
             <div class="adm-form-actions">
@@ -124,34 +132,38 @@
                     </svg>
                     Save Inventory
                 </button>
-                <a th:href="@{/admin/products/{id}/variants(id=${product.id})}"
-                   class="adm-btn adm-btn--ghost">Cancel</a>
+                <a th:href="${returnUrl}" class="adm-btn adm-btn--ghost">Cancel</a>
             </div>
         </form>
     </div>
 
     <script>
-        const baseStock = parseInt(document.getElementById('baseStock').textContent) || 0;
-        const reserved  = /*[[${inventoryForm.reserved}]]*/ 0;
+        const baseStock  = parseInt(document.getElementById('baseStock').textContent)    || 0;
+        const reserved   = parseInt(document.getElementById('baseReserved').textContent) || 0;
+        const submitBtn  = document.querySelector('button[type="submit"]');
 
         function recalc() {
-            const add     = Math.max(0, parseInt(document.getElementById('addAmount').value) || 0);
-            const total   = baseStock + add;
+            const change  = parseInt(document.getElementById('addAmount').value) || 0;
+            const total   = baseStock + change;
             const avail   = Math.max(0, total - reserved);
+            const invalid = total < reserved || total < 0;
 
-            // Keep the hidden stock field in sync so the right value is submitted
-            document.querySelector('input[name="stock"]').value = total;
+            // Keep the hidden stock field in sync
+            document.querySelector('input[name="stock"]').value = Math.max(0, total);
 
             const totalEl = document.getElementById('calcTotal');
             const availEl = document.getElementById('calcAvail');
+            const warnEl  = document.getElementById('calcWarn');
 
             totalEl.textContent = total;
-            availEl.textContent = avail;
-            availEl.style.color = avail <= 0
-                ? '#dc2626'
-                : avail <= 5 ? '#d97706' : '#16a34a';
+            totalEl.style.color = invalid ? '#dc2626' : '';
+            availEl.textContent = invalid ? '—' : avail;
+            availEl.style.color = avail <= 0 ? '#dc2626' : avail <= 5 ? '#d97706' : '#16a34a';
+            warnEl.style.display  = invalid ? 'inline' : 'none';
+            submitBtn.disabled    = invalid;
         }
 
+        document.getElementById('addAmount').addEventListener('input', recalc);
         recalc();
     </script>
 
